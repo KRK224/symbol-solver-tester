@@ -1,11 +1,11 @@
 package org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver;
 
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
-import com.tmax.global.enums.SymbolReferenceEnum;
-import com.tmax.symbol.model.dto.MethodDeclarationDTO;
-import com.tmax.symbol.model.dto.interfaces.ClassReferable;
-import com.tmax.symbol.model.dto.interfaces.MethodReferable;
-import com.tmax.symbol.pkg.symbolsolver.TypeMapperManager;
+import org.kryun.global.enums.SymbolReferenceEnum;
+import org.kryun.symbol.model.MethodDeclarationDTO;
+import org.kryun.symbol.model.interfaces.ClassReferable;
+import org.kryun.symbol.model.interfaces.MethodReferable;
+import org.kryun.symbol.pkg.symbolsolver.TypeMapperManager;
 
 /** method 추상 골격 클래스 */
 public abstract class AbstractMethodReferableTypeResolver

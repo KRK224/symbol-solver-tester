@@ -1,12 +1,12 @@
 package org.kryun.symbol.pkg.symbolsolver;
 
-import com.tmax.symbol.model.dto.ClassDTO;
-import com.tmax.symbol.model.dto.MethodDeclarationDTO;
-import com.tmax.symbol.model.dto.interfaces.ClassReferable;
-import com.tmax.symbol.model.dto.interfaces.MethodReferable;
-import com.tmax.symbol.model.dto.interfaces.Referable;
 import java.util.ArrayList;
 import java.util.List;
+import org.kryun.symbol.model.ClassDTO;
+import org.kryun.symbol.model.MethodDeclarationDTO;
+import org.kryun.symbol.model.interfaces.ClassReferable;
+import org.kryun.symbol.model.interfaces.MethodReferable;
+import org.kryun.symbol.model.interfaces.Referable;
 
 /**
  * TypeResolver가 처리한 Data를 TypeMapperManager통해 TypeMapper에 저장

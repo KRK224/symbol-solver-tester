@@ -40,11 +40,11 @@ public class MethodCallExprDTO implements MethodReferable, ClassReferable {
         this.methodCallExprId = methodCallExprId;
     }
 
-    private Long getNameExprTypeClassId() {
+    public Long getNameExprTypeClassId() {
         return nameExprTypeClassId;
     }
 
-    private void setNameExprTypeClassId(Long nameExprTypeClassId) {
+    public void setNameExprTypeClassId(Long nameExprTypeClassId) {
         this.nameExprTypeClassId = nameExprTypeClassId;
     }
 
@@ -72,11 +72,11 @@ public class MethodCallExprDTO implements MethodReferable, ClassReferable {
         this.nameExpr = nameExpr;
     }
 
-    private Long getMethodDeclId() {
+    public Long getMethodDeclId() {
         return methodDeclId;
     }
 
-    private void setMethodDeclId(Long methodDeclId) {
+    public void setMethodDeclId(Long methodDeclId) {
         this.methodDeclId = methodDeclId;
     }
 

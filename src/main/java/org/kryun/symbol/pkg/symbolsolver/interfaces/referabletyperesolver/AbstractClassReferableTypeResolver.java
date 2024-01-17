@@ -2,10 +2,10 @@ package org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver;
 
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.resolution.types.ResolvedType;
-import com.tmax.global.enums.SymbolReferenceEnum;
-import com.tmax.symbol.model.dto.ClassDTO;
-import com.tmax.symbol.model.dto.interfaces.ClassReferable;
-import com.tmax.symbol.pkg.symbolsolver.TypeMapperManager;
+import org.kryun.global.enums.SymbolReferenceEnum;
+import org.kryun.symbol.model.ClassDTO;
+import org.kryun.symbol.model.interfaces.ClassReferable;
+import org.kryun.symbol.pkg.symbolsolver.TypeMapperManager;
 
 /** class 추상 골격 클래스 */
 public abstract class AbstractClassReferableTypeResolver implements ReferableTypeResolver<ClassDTO, ClassReferable> {

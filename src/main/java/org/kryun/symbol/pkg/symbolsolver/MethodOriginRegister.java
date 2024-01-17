@@ -1,10 +1,11 @@
 package org.kryun.symbol.pkg.symbolsolver;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.tmax.symbol.model.dto.MethodDeclarationDTO;
-import com.tmax.symbol.pkg.symbolsolver.interfaces.originregister.OriginRegister;
+import org.kryun.symbol.model.MethodDeclarationDTO;
+import org.kryun.symbol.pkg.symbolsolver.interfaces.originregister.OriginRegister;
 
-public class MethodOriginRegister implements OriginRegister<MethodDeclaration, MethodDeclarationDTO> {
+public class MethodOriginRegister implements
+    OriginRegister<MethodDeclaration, MethodDeclarationDTO> {
     private TypeMapperManager tmm;
 
     // 상속 방지

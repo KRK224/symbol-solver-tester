@@ -1,8 +1,8 @@
 package org.kryun.symbol.pkg.symbolsolver;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.tmax.symbol.model.dto.ClassDTO;
-import com.tmax.symbol.pkg.symbolsolver.interfaces.originregister.OriginRegister;
+import org.kryun.symbol.model.ClassDTO;
+import org.kryun.symbol.pkg.symbolsolver.interfaces.originregister.OriginRegister;
 
 public class ClassOriginRegister implements OriginRegister<ClassOrInterfaceDeclaration, ClassDTO> {
     private TypeMapperManager tmm;

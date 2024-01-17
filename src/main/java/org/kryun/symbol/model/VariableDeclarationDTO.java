@@ -36,11 +36,11 @@ public class VariableDeclarationDTO implements ClassReferable {
         this.blockId = blockId;
     }
 
-    private Long getTypeClassId() {
+    public Long getTypeClassId() {
         return typeClassId;
     }
 
-    private void setTypeClassId(Long typeClassId) {
+    public void setTypeClassId(Long typeClassId) {
         this.typeClassId = typeClassId;
     }
 

@@ -27,11 +27,11 @@ public class ReturnMapperDTO implements ClassReferable {
         this.methodDeclId = methodDeclId;
     }
 
-    private Long getTypeClassId() {
+    public Long getTypeClassId() {
         return typeClassId;
     }
 
-    private void setTypeClassId(Long typeClassId) {
+    public void setTypeClassId(Long typeClassId) {
         this.typeClassId = typeClassId;
     }
 

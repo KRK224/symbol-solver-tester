@@ -3,9 +3,9 @@ package org.kryun.symbol.pkg.symbolsolver;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
-import com.tmax.symbol.model.dto.interfaces.ClassReferable;
-import com.tmax.symbol.pkg.symbolsolver.interfaces.generateresolvedtype.GenerateClassResolvedType;
-import com.tmax.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.AbstractClassReferableTypeResolver;
+import org.kryun.symbol.model.interfaces.ClassReferable;
+import org.kryun.symbol.pkg.symbolsolver.interfaces.generateresolvedtype.GenerateClassResolvedType;
+import org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.AbstractClassReferableTypeResolver;
 
 public class ForwardFDTypeResolver implements GenerateClassResolvedType<FieldDeclaration> {
     private TypeMapperManager tmm;

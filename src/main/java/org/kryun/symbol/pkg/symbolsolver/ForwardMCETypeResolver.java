@@ -3,9 +3,9 @@ package org.kryun.symbol.pkg.symbolsolver;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
-import com.tmax.symbol.model.dto.interfaces.MethodReferable;
-import com.tmax.symbol.pkg.symbolsolver.interfaces.generateresolvedtype.GenerateMethodResolvedType;
-import com.tmax.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.AbstractMethodReferableTypeResolver;
+import org.kryun.symbol.model.interfaces.MethodReferable;
+import org.kryun.symbol.pkg.symbolsolver.interfaces.generateresolvedtype.GenerateMethodResolvedType;
+import org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.AbstractMethodReferableTypeResolver;
 
 /**
  * MethodCallExpr 처리에 대한

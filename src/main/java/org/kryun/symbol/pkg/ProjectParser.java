@@ -2,28 +2,28 @@ package org.kryun.symbol.pkg;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.printer.DotPrinter;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
-import com.github.javaparser.utils.CodeGenerationUtils;
 import com.github.javaparser.utils.ProjectRoot;
 import com.github.javaparser.utils.SourceRoot;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 import org.kryun.global.config.AppConfig;
 import org.kryun.global.enums.SymbolStatusEnum;
 import org.kryun.symbol.model.SymbolStatusDTO;
+import org.kryun.symbol.pkg.Excel.ExcelService;
+import org.kryun.symbol.pkg.Excel.impl.ClassExcel;
+import org.kryun.symbol.pkg.Excel.impl.MceExcel;
+import org.kryun.symbol.pkg.Excel.impl.MdExcel;
+import org.kryun.symbol.pkg.Excel.impl.MvdExcel;
+import org.kryun.symbol.pkg.Excel.impl.SvdExcel;
 
 public class ProjectParser {
 
-    public void parseProject(String projectPath, SymbolStatusDTO symbolStatusDTO, Connection conn)
+    public void parseProject(String projectPath, SymbolStatusDTO symbolStatusDTO, String projName)
             throws Exception {
         ConvertJavaParserToSymbol convertJavaParserToSymbol = new ConvertJavaParserToSymbol();
         try {
@@ -56,6 +56,26 @@ public class ProjectParser {
                         }
                     }
                 }
+
+                try {
+                    System.out.println("[3/5] (2) projId: " + symbolStatusDTO.getProjId() + ", Saving into excel start");
+                    ClassExcel classExcel = new ClassExcel();
+                    classExcel.setDataList(convertJavaParserToSymbol.getClassDTOList());
+                    MceExcel mceExcel = new MceExcel();
+                    mceExcel.setDataList(convertJavaParserToSymbol.getMethodCallExprDTOList());
+                    MdExcel mdExcel = new MdExcel();
+                    mdExcel.setDataList(convertJavaParserToSymbol.getMethodDeclarationDTOList());
+                    MvdExcel mvdExcel = new MvdExcel();
+                    mvdExcel.setDataList(convertJavaParserToSymbol.getMemberVariableDeclarationDTOList());
+                    SvdExcel svdExcel = new SvdExcel();
+                    svdExcel.setDataList(convertJavaParserToSymbol.getStmtVariableDeclarationDTOList());
+
+                    ExcelService excelService = new ExcelService(classExcel, mceExcel, mdExcel, mvdExcel, svdExcel);
+                    excelService.createExcelFile(projName);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+
             } catch (Exception e) {
                 // Parsing 실패 시
                 symbolStatusDTO.setStatusEnum(SymbolStatusEnum.UNAVAILAbLE);
@@ -65,35 +85,6 @@ public class ProjectParser {
         } finally {
             convertJavaParserToSymbol.clear();
         }
-    }
-
-    public void dotPrinter(String fileName, CompilationUnit cu) throws IOException {
-        // Now comes the inspection code:
-        DotPrinter printer = new DotPrinter(true);
-        try (FileWriter fileWriter = new FileWriter(fileName + ".dot");
-                PrintWriter printWriter = new PrintWriter(fileWriter)) {
-            printWriter.print(printer.output(cu));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // ProcessBuilder
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        String command = "dot -Tpng " + fileName + ".dot" + " > " + fileName + ".png";
-        processBuilder.command("bash", "-c", command);
-        Process process = processBuilder.start();
-
-    }
-
-    private void saveSourceCodesInOutputDir(SourceRoot sourceRoot) {
-        // 소스코드 형태로 cu를 재조립해서 output 디렉토리에 저장
-        // This saves all the files we just read to an output directory.
-        sourceRoot.saveAll(
-                // The path of the Maven module/project which contains the LogicPositivizer
-                // class.
-                CodeGenerationUtils.mavenModuleRoot(ProjectParser.class)
-                        // appended with a path to "output"
-                        .resolve(Paths.get("output")));
     }
 
     private ProjectRoot getProjectRoot(String projectPath, int depth) throws Exception {

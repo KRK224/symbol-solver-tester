@@ -47,11 +47,11 @@ public class ExprManager {
             }
         }
         assignExprDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
         assignExprDTO.setAssignExprId(assignExprId);
         assignExprDTO.setBlockId(blockId);
         assignExprDTO.setTarget(target);

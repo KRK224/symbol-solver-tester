@@ -52,7 +52,7 @@ public class AppConfig {
     public static final String GRADLE_VERSION = "7.4";
 
     // file workspace
-    public static final String WORKSPACE_PATH = System.getProperty("user.dir") + "/application/" + APP_NAME + "/workspace";
+    public static final String WORKSPACE_PATH = System.getProperty("user.dir") + "/workspace";
 
     // sasctl
     public static final String SASCTL = "sasctl-0.3.1.hotfix.jar";

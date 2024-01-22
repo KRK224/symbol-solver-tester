@@ -8,6 +8,7 @@ public class MethodDeclarationDTO {
     private Long methodDeclId;
     private Long blockId;
     private Long belongedClassId;
+    private Long fullQualifiedNameId;
     private String name;
     private String modifier;
     private String accessModifier;
@@ -36,11 +37,16 @@ public class MethodDeclarationDTO {
     public Long getBelongedClassId() {
         return belongedClassId;
     }
-
-
-
     public void setBelongedClassId(Long belongedClassId) {
         this.belongedClassId = belongedClassId;
+    }
+
+    public Long getFullQualifiedNameId() {
+        return fullQualifiedNameId;
+    }
+
+    public void setFullQualifiedNameId(Long fullQualifiedNameId) {
+        this.fullQualifiedNameId = fullQualifiedNameId;
     }
 
     public String getName() {
@@ -102,16 +108,17 @@ public class MethodDeclarationDTO {
     @Override
     public String toString() {
         return "MethodDeclarationDTO{" +
-                "methodDeclarationId: " + methodDeclId +
-                ", blockId: " + blockId +
-                ", belongedClassId: " + belongedClassId +
-                ", name: '" + name + '\'' +
-                "', nodeType: '" + node.getMetaModel().getTypeName() +
-                ", modifier: '" + modifier + '\'' +
-                ", accessModifier: '" + accessModifier + '\'' +
-                ", returnMappers: " + returnMapper +
-                ", parameters: " + parameters +
-                ", position: " + position +
-                "}\n";
+            "methodDeclarationId: " + methodDeclId +
+            ", blockId: " + blockId +
+            ", belongedClassId: " + belongedClassId +
+            ", fullQualifiedNameId : " + fullQualifiedNameId +
+            ", name: '" + name + '\'' +
+            "', nodeType: '" + node.getMetaModel().getTypeName() +
+            ", modifier: '" + modifier + '\'' +
+            ", accessModifier: '" + accessModifier + '\'' +
+            ", returnMappers: " + returnMapper +
+            ", parameters: " + parameters +
+            ", position: " + position +
+            "}\n";
     }
 }

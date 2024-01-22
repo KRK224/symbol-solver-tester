@@ -19,6 +19,7 @@ public class GeneratorIdentifier {
         symbolIds.put("return_mapper", 0L);
         symbolIds.put("method_call_expr", 0L);
         symbolIds.put("assign_expr", 0L);
+        symbolIds.put("full_qualified_name", 0L);
     }
     public Map<String, Long> getSymbolIds() {
         return symbolIds;

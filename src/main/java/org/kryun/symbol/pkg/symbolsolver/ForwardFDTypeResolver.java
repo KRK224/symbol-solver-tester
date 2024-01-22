@@ -1,37 +1,25 @@
 package org.kryun.symbol.pkg.symbolsolver;
 
-import com.github.javaparser.ast.Node;
+import java.util.Optional;
+
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
-import org.kryun.symbol.model.interfaces.ClassReferable;
 import org.kryun.symbol.pkg.symbolsolver.interfaces.generateresolvedtype.GenerateClassResolvedType;
 import org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.AbstractClassReferableTypeResolver;
 
 public class ForwardFDTypeResolver implements GenerateClassResolvedType<FieldDeclaration> {
-    private TypeMapperManager tmm;
+    private static class LazyHolder {
+        private static final ForwardFDTypeResolver INSTANCE = new ForwardFDTypeResolver();
+    }
+
+    public static ForwardFDTypeResolver getInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
     private AbstractClassReferableTypeResolver fdTypeResolverImpl;
 
-    public ForwardFDTypeResolver(TypeMapperManager tmm) {
-        this.tmm = tmm;
-        this.fdTypeResolverImpl = new AbstractClassReferableTypeResolver(tmm) {
-
-            @Override
-            public final boolean registerRefDtoService(Node node, ClassReferable refDto) throws Exception {
-                try {
-                    if (node instanceof FieldDeclaration) {
-                        FieldDeclaration fd = (FieldDeclaration) node;
-                        HashcodeDTO hashcodeDTO = generateClassHashcodeDTO(generateResolvedType(fd));
-                        registerRefDtoByHashcodeDTO(hashcodeDTO, refDto);
-                        return true;
-                    } else {
-                        Exception e = new Exception("전달받은 Node의 타입이 FieldDeclaration 아닙니다.");
-                        throw e;
-                    }
-                } catch (Exception e) {
-                    throw e;
-                }
-            }
-        };
+    private ForwardFDTypeResolver() {
+        this.fdTypeResolverImpl = new AbstractClassReferableTypeResolver();
     }
 
     @Override
@@ -43,8 +31,11 @@ public class ForwardFDTypeResolver implements GenerateClassResolvedType<FieldDec
         }
     }
 
-    public AbstractClassReferableTypeResolver getTypeResolver() {
-        return fdTypeResolverImpl;
+    public Optional<String> getFullQualifiedName(FieldDeclaration fd) {
+        try {
+            return fdTypeResolverImpl.getFullQualifiedName(generateResolvedType(fd));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
-
 }

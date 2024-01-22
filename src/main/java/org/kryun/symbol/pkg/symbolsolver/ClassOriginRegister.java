@@ -1,45 +1,31 @@
 package org.kryun.symbol.pkg.symbolsolver;
 
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import org.kryun.symbol.model.ClassDTO;
-import org.kryun.symbol.pkg.symbolsolver.interfaces.originregister.OriginRegister;
+import java.util.Optional;
 
-public class ClassOriginRegister implements OriginRegister<ClassOrInterfaceDeclaration, ClassDTO> {
-    private TypeMapperManager tmm;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import org.kryun.symbol.pkg.symbolsolver.interfaces.originresolver.OriginResolver;
+
+public class ClassOriginRegister implements OriginResolver<ClassOrInterfaceDeclaration> {
+
+    private static class LazyHolder {
+        private static final ClassOriginRegister INSTANCE = new ClassOriginRegister();
+    }
+
+    public static ClassOriginRegister getInstance() {
+        return LazyHolder.INSTANCE;
+    }
 
     // 상속 방지
     private ClassOriginRegister() {
     }
 
-    ClassOriginRegister(TypeMapperManager tmm) {
-        this.tmm = tmm;
-    }
-
-    public static ClassOriginRegister getRegisterClassOrigin(TypeMapperManager tmm) {
-        return new ClassOriginRegister(tmm);
-    }
-
     @Override
-    public final boolean registerOriginDtoService(ClassOrInterfaceDeclaration classorInterface, ClassDTO classDto) {
+    public Optional<String> getFullQualifiedName(ClassOrInterfaceDeclaration originNode) throws Exception {
         try {
-            String myHashcode = getMyHashcodeString(classorInterface);
-            tmm.registerClassDTO(myHashcode, classDto);
-            tmm.registerClassIdtoRefList(myHashcode, classDto);
-            return true;
+            String fullQualifiedName = originNode.resolve().getQualifiedName();
+            return Optional.of(fullQualifiedName);
         } catch (Exception e) {
-            // System.out.println("registerClassOriginDtoService Error: " +
-            // classDto.getName() + "\n\t" + e.getMessage());
-            return false;
-        }
-    }
-
-    @Override
-    public final String getMyHashcodeString(ClassOrInterfaceDeclaration cid) throws Exception {
-        try {
-            String hashcode = cid.resolve().getQualifiedName();
-            return hashcode;
-        } catch (Exception e) {
-            throw e;
+            return Optional.empty();
         }
     }
 

@@ -1,4 +1,4 @@
-package org.kryun.symbol;
+package org.kryun;
 
 import org.kryun.config.GeneratorIdentifier;
 import org.kryun.global.config.AppConfig;

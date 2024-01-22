@@ -3,10 +3,10 @@ package org.kryun.symbol.model;
 import com.github.javaparser.ast.Node;
 import org.kryun.symbol.model.interfaces.ClassReferable;
 
-public class ReturnMapperDTO implements ClassReferable {
+public class ReturnMapperDTO {
     private Long returnMapperId;
     private Long methodDeclId;
-    private Long typeClassId;
+    private Long fullQualifiedNameId;
     private String type;
     private Node node;
     private Position position;
@@ -27,34 +27,27 @@ public class ReturnMapperDTO implements ClassReferable {
         this.methodDeclId = methodDeclId;
     }
 
-    public Long getTypeClassId() {
-        return typeClassId;
+    public Long getFullQualifiedNameId() {
+        return fullQualifiedNameId;
     }
-
-    public void setTypeClassId(Long typeClassId) {
-        this.typeClassId = typeClassId;
+    public void setFullQualifiedNameId(Long fullQualifiedNameId) {
+        this.fullQualifiedNameId = fullQualifiedNameId;
     }
-
     public String getType() {
         return type;
     }
-
     public void setType(String type) {
         this.type = type;
     }
-
     public Node getNode() {
         return node;
     }
-
     public void setNode(Node node) {
         this.node = node;
     }
-
     public Position getPosition() {
         return position;
     }
-
     public void setPosition(Position position) {
         this.position = position;
     }
@@ -62,21 +55,11 @@ public class ReturnMapperDTO implements ClassReferable {
     @Override
     public String toString() {
         return "ReturnMapperDTO{" +
-                "returnMapperId: " + returnMapperId +
-                ", methodDeclId: " + methodDeclId +
-                ", typeClassId: " + typeClassId +
-                ", type: '" + type + '\'' +
-                ", position: " + position +
-                '}';
-    }
-
-    @Override
-    public Long getTypeClassIdImpl() {
-        return getTypeClassId();
-    }
-
-    @Override
-    public void setTypeClassIdImpl(Long classId) {
-        setTypeClassId(classId);
+            "returnMapperId: " + returnMapperId +
+            ", methodDeclId: " + methodDeclId +
+            ", fullQualifiedNameId : " + fullQualifiedNameId +
+            ", type: '" + type + '\'' +
+            ", position: " + position +
+            '}';
     }
 }

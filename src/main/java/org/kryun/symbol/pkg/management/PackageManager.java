@@ -46,11 +46,11 @@ public class PackageManager {
         packageDTO.setName(packageName);
 
         packageDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
 
         packageDTOList.add(packageDTO);
 

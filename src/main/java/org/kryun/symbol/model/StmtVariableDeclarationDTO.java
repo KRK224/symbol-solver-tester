@@ -7,7 +7,6 @@ public class StmtVariableDeclarationDTO extends VariableDeclarationDTO {
         return "StmtVariableDeclarationDTO : {" +
                 "variableId : " + getVariableId() +
                 ", blockId : " + getBlockId() +
-                ", typeClassId : " + getTypeClassIdImpl() +
                 ", importId : " + getImportId() +
                 ", name : '" + getName() + '\'' +
                 "', nodeType: '" + getNode().getMetaModel().getTypeName() +

@@ -1,18 +1,23 @@
 package org.kryun.symbol.model;
 
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import java.util.List;
-import org.kryun.symbol.model.interfaces.ClassReferable;
-import org.kryun.symbol.model.interfaces.MethodReferable;
+import lombok.Getter;
+import lombok.Setter;
 
-public class MethodCallExprDTO implements MethodReferable, ClassReferable {
+@Getter
+@Setter
+public class MethodCallExprDTO {
     private String name;
     private Long blockId;
     private Long methodCallExprId;
-    private Long nameExprTypeClassId;
+    private Long fullQualifiedNameId;
     private Position position;
-    private String nameExpr;
+    private Expression nameExprNode;
+
+    private Long nameExprFullQualifiedNameId;
     private List<ArgumentDTO> arguments;
-    private Long methodDeclId;
 
     public String getName() {
         return name;
@@ -20,6 +25,14 @@ public class MethodCallExprDTO implements MethodReferable, ClassReferable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Long getFullQualifiedNameId() {
+        return fullQualifiedNameId;
+    }
+
+    public void setFullQualifiedNameId(Long fullQualifiedNameId) {
+        this.fullQualifiedNameId = fullQualifiedNameId;
     }
 
     public Long getBlockId() {
@@ -39,15 +52,6 @@ public class MethodCallExprDTO implements MethodReferable, ClassReferable {
     public void setMethodCallExprId(Long methodCallExprId) {
         this.methodCallExprId = methodCallExprId;
     }
-
-    public Long getNameExprTypeClassId() {
-        return nameExprTypeClassId;
-    }
-
-    public void setNameExprTypeClassId(Long nameExprTypeClassId) {
-        this.nameExprTypeClassId = nameExprTypeClassId;
-    }
-
     public Position getPosition() {
         return position;
     }
@@ -64,54 +68,34 @@ public class MethodCallExprDTO implements MethodReferable, ClassReferable {
         this.arguments = arguments;
     }
 
-    public String getNameExpr() {
-        return nameExpr;
-    }
-
-    public void setNameExpr(String nameExpr) {
-        this.nameExpr = nameExpr;
-    }
-
-    public Long getMethodDeclId() {
-        return methodDeclId;
-    }
-
-    public void setMethodDeclId(Long methodDeclId) {
-        this.methodDeclId = methodDeclId;
+    /**
+     * Todo. methodCall Chaining 이슈 해결
+     * @return
+     */
+    public String getScopeSimpleName() {
+        Expression expression = this.getNameExprNode();
+        if(expression != null) {
+            if (expression instanceof MethodCallExpr) {
+                MethodCallExpr scopeMethodCallExpr = (MethodCallExpr) expression;
+                return scopeMethodCallExpr.getName().toString();
+            }
+            return expression.toString();
+        }
+        return null;
     }
 
     @Override
     public String toString() {
         return "MethodCallExprDTO : {" +
-                "methodCallExprId : " + methodCallExprId +
-                ", blockId : " + blockId +
-                ", nameExprTypeClassId : " + nameExprTypeClassId +
-                ", name : '" + name + '\'' +
-                ", arguments : '" + arguments + '\'' +
-                ", Position : '" + position +
-                ", NameExpr : " + nameExpr +
-                ", methodDeclId : " + methodDeclId +
-                "}\n";
+            "methodCallExprId : " + methodCallExprId +
+            ", blockId : " + blockId +
+            ", fullQualifiedNameId : " + fullQualifiedNameId +
+            ", name : '" + name + '\'' +
+            ", arguments : '" + arguments + '\'' +
+            ", Position : '" + position +
+            ", NameExpr : " + nameExprNode +
+            "}\n";
     }
 
-    @Override
-    public Long getMethodDeclIdImpl() {
-        return getMethodDeclId();
-    }
-
-    @Override
-    public void setMethodDeclIdImpl(Long methodDeclId) {
-        setMethodDeclId(methodDeclId);
-    }
-
-    @Override
-    public Long getTypeClassIdImpl() {
-        return getNameExprTypeClassId();
-    }
-
-    @Override
-    public void setTypeClassIdImpl(Long classId) {
-        setNameExprTypeClassId(classId);
-    }
 
 }

@@ -3,6 +3,8 @@ package org.kryun.symbol.model;
 public class ClassDTO {
     private Long classId;
     private Long packageId = -100L;
+
+    private Long fullQualifiedNameId;
     private String name;
     private String modifier;
     private String accessModifier;
@@ -37,7 +39,13 @@ public class ClassDTO {
     public void setName(String name) {
         this.name = name;
     }
+    public Long getFullQualifiedNameId() {
+        return fullQualifiedNameId;
+    }
 
+    public void setFullQualifiedNameId(Long fullQualifiedNameId) {
+        this.fullQualifiedNameId = fullQualifiedNameId;
+    }
     public String getModifier() {
         return modifier;
     }

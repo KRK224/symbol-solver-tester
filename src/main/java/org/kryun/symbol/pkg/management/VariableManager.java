@@ -40,7 +40,7 @@ public class VariableManager {
     }
 
     public MemberVariableDeclarationDTO buildVariableDeclInMemberField(Long variableId, Long blockId,
-            Long belongedClassId, Node node) {
+        Long belongedClassId, Node node) {
         MemberVariableDeclarationDTO variableDeclarationDTO = new MemberVariableDeclarationDTO();
         FieldDeclaration fieldDeclaration = (FieldDeclaration) node;
 
@@ -56,9 +56,9 @@ public class VariableManager {
         for (Modifier modifier : modifiers) {
             // 접근 제어자 분별
             if (modifier.getKeyword().equals(Modifier.Keyword.DEFAULT) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
+                modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
+                modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
+                modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
                 accessModifierKeyword = modifier.getKeyword().asString();
             } else {
                 modifierKeyword = modifier.getKeyword().asString();
@@ -74,8 +74,8 @@ public class VariableManager {
             name = variableDeclarator.getName().asString();
 
             Expression initializerExpr = variableDeclarator.getInitializer().isPresent()
-                    ? variableDeclarator.getInitializer().get()
-                    : null;
+                ? variableDeclarator.getInitializer().get()
+                : null;
             if (initializerExpr != null) {
                 List<Node> initializerChildren = initializerExpr.getChildNodes();
                 for (Node child : initializerChildren) {
@@ -99,11 +99,11 @@ public class VariableManager {
         variableDeclarationDTO.setInitializer(initializer);
         variableDeclarationDTO.setNode(node);
         variableDeclarationDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
 
         memberVariableDeclarationDTOList.add(variableDeclarationDTO);
         return variableDeclarationDTO;
@@ -125,9 +125,9 @@ public class VariableManager {
         for (Modifier modifier : modifiers) {
             // 접근 제어자 분별
             if (modifier.getKeyword().equals(Modifier.Keyword.DEFAULT) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
+                modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
+                modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
+                modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
                 accessModifierKeyword = modifier.getKeyword().asString();
             } else {
                 modifierKeyword = modifier.getKeyword().asString();
@@ -147,8 +147,8 @@ public class VariableManager {
             //
             // }
             Expression initializerExpr = variableDeclarator.getInitializer().isPresent()
-                    ? variableDeclarator.getInitializer().get()
-                    : null;
+                ? variableDeclarator.getInitializer().get()
+                : null;
             if (initializerExpr != null) {
                 List<Node> initializerChildren = initializerExpr.getChildNodes();
                 for (Node child : initializerChildren) {
@@ -171,11 +171,11 @@ public class VariableManager {
         variableDeclarationDTO.setInitializer(initializer);
         variableDeclarationDTO.setNode(node);
         variableDeclarationDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
 
         stmtVariableDeclarationDTOList.add(variableDeclarationDTO);
         return variableDeclarationDTO;

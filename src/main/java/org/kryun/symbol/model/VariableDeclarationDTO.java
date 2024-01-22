@@ -3,13 +3,12 @@ package org.kryun.symbol.model;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.type.Type;
 import java.util.Optional;
-import org.kryun.symbol.model.interfaces.ClassReferable;
 
-public class VariableDeclarationDTO implements ClassReferable {
+public class VariableDeclarationDTO{
     private Long variableId;
     private Long blockId;
     private Long importId;
-    private Long typeClassId; // 변수가 참조하는 클래스
+    private Long fullQualifiedNameId;
     private String name;
     private String modifier;
     private String accessModifier;
@@ -36,20 +35,19 @@ public class VariableDeclarationDTO implements ClassReferable {
         this.blockId = blockId;
     }
 
-    public Long getTypeClassId() {
-        return typeClassId;
-    }
-
-    public void setTypeClassId(Long typeClassId) {
-        this.typeClassId = typeClassId;
-    }
-
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+    public Long getFullQualifiedNameId() {
+        return fullQualifiedNameId;
+    }
+
+    public void setFullQualifiedNameId(Long fullQualifiedNameId) {
+        this.fullQualifiedNameId = fullQualifiedNameId;
     }
 
     public String getModifier() {
@@ -133,13 +131,4 @@ public class VariableDeclarationDTO implements ClassReferable {
                 "}\n";
     }
 
-    @Override
-    public Long getTypeClassIdImpl() {
-        return getTypeClassId();
-    }
-
-    @Override
-    public void setTypeClassIdImpl(Long classId) {
-        setTypeClassId(classId);
-    }
 }

@@ -1,49 +1,37 @@
 package org.kryun.symbol.pkg.symbolsolver;
 
-import com.github.javaparser.ast.Node;
+import java.util.Optional;
+
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
-import org.kryun.symbol.model.interfaces.MethodReferable;
 import org.kryun.symbol.pkg.symbolsolver.interfaces.generateresolvedtype.GenerateMethodResolvedType;
 import org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.AbstractMethodReferableTypeResolver;
 
 /**
  * MethodCallExpr 처리에 대한
- * 
  */
 public class ForwardMCETypeResolver
-        implements GenerateMethodResolvedType<MethodCallExpr> {
+    implements GenerateMethodResolvedType<MethodCallExpr> {
 
-    private TypeMapperManager tmm;
+    private static class LazyHolder {
+
+        private static final ForwardMCETypeResolver INSTANCE = new ForwardMCETypeResolver();
+    }
+
+    // singleton
+    public static ForwardMCETypeResolver getInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
     private AbstractMethodReferableTypeResolver methodTypeResolverImpl;
 
-    public ForwardMCETypeResolver(TypeMapperManager tmm) {
-        this.tmm = tmm;
-        this.methodTypeResolverImpl = new AbstractMethodReferableTypeResolver(tmm) {
-
-            @Override
-            public final boolean registerRefDtoService(Node node, MethodReferable refDto) throws Exception {
-                try {
-                    if (node instanceof MethodCallExpr) {
-                        MethodCallExpr mce = (MethodCallExpr) node;
-                        // hashcodeDTO 생성
-                        HashcodeDTO hashcodeDTO = generateMDHashcodeDTO(generateResolvedType(mce));
-                        // refDTO에 id 등록 또는 자기 자신 등록 로직
-                        registerRefDtoByHashcodeDTO(hashcodeDTO, refDto);
-                        return true;
-                    } else {
-                        Exception e = new Exception("전달받은 Node의 타입이 MethodCallExpr이 아닙니다.");
-                        throw e;
-                    }
-                } catch (Exception e) {
-                    throw e;
-                }
-            }
-        };
+    private ForwardMCETypeResolver() {
+        this.methodTypeResolverImpl = new AbstractMethodReferableTypeResolver();
     }
 
     @Override
-    public final ResolvedMethodDeclaration generateResolvedType(MethodCallExpr mce) throws Exception {
+    public final ResolvedMethodDeclaration generateResolvedType(MethodCallExpr mce)
+        throws Exception {
         try {
             return mce.resolve();
         } catch (Exception e) {
@@ -51,8 +39,11 @@ public class ForwardMCETypeResolver
         }
     }
 
-    // 전달 함수
-    public AbstractMethodReferableTypeResolver getTypeResolver() {
-        return methodTypeResolverImpl;
+    public Optional<String> getFullQualifiedName(MethodCallExpr mce) {
+        try {
+            return methodTypeResolverImpl.getFullQualifiedName(generateResolvedType(mce));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 }

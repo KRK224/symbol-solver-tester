@@ -4,10 +4,12 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.SimpleName;
+import com.github.javaparser.ast.type.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -77,9 +79,10 @@ public class MethodManager {
         this.returnMapperDTOList.clear();
     }
 
-    public MethodDeclarationDTO buildMethodDeclaration(Long methodDeclarationId, Long blockId, Long belongedClassId,
-            Node node,
-            String nodeType, GeneratorIdentifier generatorIdentifier) {
+    public MethodDeclarationDTO buildMethodDeclaration(Long methodDeclarationId, Long blockId,
+        Long belongedClassId,
+        Node node,
+        String nodeType, GeneratorIdentifier generatorIdentifier) {
         MethodDeclarationDTO methodDeclarationDTO = new MethodDeclarationDTO();
         ReturnMapperDTO returnMapperDTO = new ReturnMapperDTO();
         List<Node> childNodes = node.getChildNodes();
@@ -98,9 +101,9 @@ public class MethodManager {
                 Modifier modifier = (Modifier) childNode;
                 // 접근 제어자 분별
                 if (modifier.getKeyword().equals(Modifier.Keyword.DEFAULT) ||
-                        modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
-                        modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
-                        modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
+                    modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
+                    modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
+                    modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
                     accessModifierKeyword = modifier.getKeyword().asString();
                 } else {
                     modifierKeyword = modifier.getKeyword().asString();
@@ -122,17 +125,24 @@ public class MethodManager {
                 parameterDTO.setType(parameterNode.getType().asString());
                 parameterDTO.setNode(parameterNode);
                 parameterDTO.setPosition(
-                        new Position(
-                                parameterNode.getRange().get().begin.line,
-                                parameterNode.getRange().get().begin.column,
-                                parameterNode.getRange().get().end.line,
-                                parameterNode.getRange().get().end.column));
+                    new Position(
+                        parameterNode.getRange().get().begin.line,
+                        parameterNode.getRange().get().begin.column,
+                        parameterNode.getRange().get().end.line,
+                        parameterNode.getRange().get().end.column));
 
                 parameterDTOList.add(parameterDTO);
                 localParameterDTOList.add(parameterDTO);
 
             } else if (childNodeTypeName.matches("(.*)Type")) {
-                String returnValueTypeName = childNode.toString();
+                Type returnType = ((Type) childNode).clone();
+
+                // annotation 및 comment 제거 과정
+                for (AnnotationExpr annotation : returnType.getAnnotations()) {
+                    returnType.remove(annotation);
+                }
+                returnType.getComment().ifPresent((comment) -> returnType.remove(comment));
+                String returnValueTypeName = returnType.toString();
 
                 returnMapperDTO.setReturnMapperId(symbolIds.get("return_mapper"));
                 symbolIds.put("return_mapper", symbolIds.get("return_mapper") + 1);
@@ -141,11 +151,11 @@ public class MethodManager {
                 returnMapperDTO.setType(returnValueTypeName);
                 returnMapperDTO.setNode(childNode);
                 returnMapperDTO.setPosition(
-                        new Position(
-                                childNode.getRange().get().begin.line,
-                                childNode.getRange().get().begin.column,
-                                childNode.getRange().get().end.line,
-                                childNode.getRange().get().end.column));
+                    new Position(
+                        childNode.getRange().get().begin.line,
+                        childNode.getRange().get().begin.column,
+                        childNode.getRange().get().end.line,
+                        childNode.getRange().get().end.column));
                 returnMapperDTOList.add(returnMapperDTO);
             }
         }
@@ -162,18 +172,19 @@ public class MethodManager {
 
         methodDeclarationDTO.setNode(node);
         methodDeclarationDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
 
         methodDeclarationDTOList.add(methodDeclarationDTO);
         return methodDeclarationDTO;
     }
 
-    public MethodCallExprDTO buildMethodCallExpr(Long methodCallExprId, Long blockId, Node node, String nodeType,
-            GeneratorIdentifier generatorIdentifier) {
+    public MethodCallExprDTO buildMethodCallExpr(Long methodCallExprId, Long blockId, Node node,
+        String nodeType,
+        GeneratorIdentifier generatorIdentifier) {
         MethodCallExprDTO methodCallExprDTO = new MethodCallExprDTO();
         MethodCallExpr methodCallExpr = (MethodCallExpr) node;
         List<Node> childNodes = node.getChildNodes();
@@ -181,29 +192,11 @@ public class MethodManager {
         Map<String, Long> symbolIds = generatorIdentifier.getSymbolIds();
 
         String methodName = "";
-        String varName = "";
         int argumentIndex = 1;
 
-        // Method call을 한 Class instance의 이름을 가져옴
-        if (!((MethodCallExpr) node).getScope().isEmpty()) {
-            if (((MethodCallExpr) node).getScope().get().isNameExpr()) {
-                varName = ((MethodCallExpr) node).getScope().get().toString();
-            }
-        }
-
-        for (Node childNode : childNodes) {
-            String childNodeTypeName = childNode.getMetaModel().getTypeName();
-            // scope node 에 대한 처리도 해줘야함
-            if (childNodeTypeName.equals("SimpleName")) {
-                SimpleName simpleName = (SimpleName) childNode;
-                methodName = simpleName.asString();
-            }
-            // 다른 type의 경우 분기처리 해줘야함
-            else if (childNodeTypeName.equals("NameExpr")) {
-                NameExpr nameExpr = (NameExpr) childNode;
-                // varName = nameExpr.getNameAsString();
-            }
-        }
+        methodName = methodCallExpr.getName().getIdentifier();
+        methodCallExpr.getScope()
+            .ifPresent((expression -> methodCallExprDTO.setNameExprNode(expression)));
 
         NodeList<Expression> arguments = methodCallExpr.getArguments();
         for (Expression arg : arguments) {
@@ -216,26 +209,25 @@ public class MethodManager {
             // 임시로 Node Type 으로 저장
             argumentDTO.setType(nodeType);
             argumentDTO.setPosition(
-                    new Position(
-                            arg.getRange().get().begin.line,
-                            arg.getRange().get().begin.column,
-                            arg.getRange().get().end.line,
-                            arg.getRange().get().end.column));
+                new Position(
+                    arg.getRange().get().begin.line,
+                    arg.getRange().get().begin.column,
+                    arg.getRange().get().end.line,
+                    arg.getRange().get().end.column));
             argumentDTOList.add(argumentDTO);
             localArgumentDTOList.add(argumentDTO);
         }
         methodCallExprDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
 
         methodCallExprDTO.setMethodCallExprId(methodCallExprId);
         methodCallExprDTO.setBlockId(blockId);
         methodCallExprDTO.setName(methodName);
         methodCallExprDTO.setArguments(localArgumentDTOList);
-        methodCallExprDTO.setNameExpr(varName);
 
         methodCallExprDTOList.add(methodCallExprDTO);
         return methodCallExprDTO;

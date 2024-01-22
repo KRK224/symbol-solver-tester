@@ -6,6 +6,7 @@ import java.util.List;
 import org.kryun.symbol.model.ImportDTO;
 import org.kryun.symbol.model.Position;
 
+
 public class ImportManager {
 
     private final List<ImportDTO> importDTOList;
@@ -34,11 +35,11 @@ public class ImportManager {
         importDTO.setBlockId(blockId);
         importDTO.setName(nodeValue);
         importDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
 
         importDTOList.add(importDTO);
 

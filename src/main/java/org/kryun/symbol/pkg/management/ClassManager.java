@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.kryun.symbol.model.ClassDTO;
 import org.kryun.symbol.model.Position;
-
 public class ClassManager {
 
     private final List<ClassDTO> classDTOList;
@@ -41,9 +40,9 @@ public class ClassManager {
         for (Modifier modifier : modifiers) {
             // 접근 제어자 분별
             if (modifier.getKeyword().equals(Modifier.Keyword.DEFAULT) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
+                modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
+                modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
+                modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
                 accessModifierKeyword = modifier.getKeyword().asString();
             } else {
                 modifierKeyword = modifier.getKeyword().asString();
@@ -71,11 +70,11 @@ public class ClassManager {
         classDTO.setIsImplemented(isImplemented);
         classDTO.setImplementClass(implementClass);
         classDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
 
         classDTOList.add(classDTO);
 
@@ -94,15 +93,17 @@ public class ClassManager {
         for (Modifier modifier : modifiers) {
             // 접근 제어자 분별
             if (modifier.getKeyword().equals(Modifier.Keyword.DEFAULT) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
-                    modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
+                modifier.getKeyword().equals(Modifier.Keyword.PUBLIC) ||
+                modifier.getKeyword().equals(Modifier.Keyword.PROTECTED) ||
+                modifier.getKeyword().equals(Modifier.Keyword.PRIVATE)) {
                 accessModifierKeyword = modifier.getKeyword().asString();
             } else {
                 modifierKeyword = modifier.getKeyword().asString();
             }
         }
 
+        // NodeList<EnumConstantDeclaration> enumConstantDeclarations =
+        // enumDeclaration.getEntries();
 
         classDTO.setClassId(classId);
         classDTO.setBlockId(blockId);
@@ -113,11 +114,11 @@ public class ClassManager {
         // enumConstantDeclarations 를 class dto 에 넣을 만한 멤버 변수가 필요함.
         classDTO.setType("enum");
         classDTO.setPosition(
-                new Position(
-                        node.getRange().get().begin.line,
-                        node.getRange().get().begin.column,
-                        node.getRange().get().end.line,
-                        node.getRange().get().end.column));
+            new Position(
+                node.getRange().get().begin.line,
+                node.getRange().get().begin.column,
+                node.getRange().get().end.line,
+                node.getRange().get().end.column));
 
         classDTOList.add(classDTO);
 

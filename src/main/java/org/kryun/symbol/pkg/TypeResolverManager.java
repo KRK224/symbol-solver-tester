@@ -1,102 +1,141 @@
 package org.kryun.symbol.pkg;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
-import org.kryun.symbol.model.ClassDTO;
-import org.kryun.symbol.model.MemberVariableDeclarationDTO;
-import org.kryun.symbol.model.MethodCallExprDTO;
-import org.kryun.symbol.model.MethodDeclarationDTO;
-import org.kryun.symbol.model.ParameterDTO;
-import org.kryun.symbol.model.ReturnMapperDTO;
-import org.kryun.symbol.model.StmtVariableDeclarationDTO;
+import java.util.Optional;
+import org.kryun.symbol.model.FullQualifiedNameDTO;
 import org.kryun.symbol.pkg.symbolsolver.ClassOriginRegister;
+import org.kryun.symbol.pkg.symbolsolver.EnumOriginRegister;
 import org.kryun.symbol.pkg.symbolsolver.ForwardFDTypeResolver;
 import org.kryun.symbol.pkg.symbolsolver.ForwardMCETypeResolver;
+import org.kryun.symbol.pkg.symbolsolver.ForwardNameExprTypeResolver;
 import org.kryun.symbol.pkg.symbolsolver.ForwardParamTypeResolver;
 import org.kryun.symbol.pkg.symbolsolver.ForwardRMTypeResolver;
 import org.kryun.symbol.pkg.symbolsolver.ForwardVDTypeResolver;
 import org.kryun.symbol.pkg.symbolsolver.MethodOriginRegister;
 import org.kryun.symbol.pkg.symbolsolver.TypeMapperManager;
 
+
 class TypeResolverManager {
-    private final TypeMapperManager typeMapperManager = TypeMapperManager.getTypeMapperManager();
-    private final ForwardRMTypeResolver returnMapperTypeResolver = new ForwardRMTypeResolver(typeMapperManager);
-    private final ForwardMCETypeResolver methodCallExprTypeResolver = new ForwardMCETypeResolver(typeMapperManager);
-    private final ForwardFDTypeResolver fieldDeclTypeResolver = new ForwardFDTypeResolver(typeMapperManager);
-    private final ForwardVDTypeResolver variableDeclTypeResolver = new ForwardVDTypeResolver(typeMapperManager);
-    private final ForwardParamTypeResolver parameterTypeResolver = new ForwardParamTypeResolver(typeMapperManager);
-    private final ClassOriginRegister classOriginRegister = ClassOriginRegister
-            .getRegisterClassOrigin(typeMapperManager);
-    private final MethodOriginRegister methodOriginRegister = MethodOriginRegister
-            .getRegisterMethodOrigin(typeMapperManager);
+
+    private final TypeMapperManager typeMapperManager = new TypeMapperManager();
+    private final ForwardRMTypeResolver returnMapperTypeResolver = ForwardRMTypeResolver.getInstance();
+    private final ForwardMCETypeResolver methodCallExprTypeResolver = ForwardMCETypeResolver.getInstance();
+    private final ForwardFDTypeResolver fieldDeclTypeResolver = ForwardFDTypeResolver.getInstance();
+    private final ForwardVDTypeResolver variableDeclTypeResolver = ForwardVDTypeResolver.getInstance();
+    private final ForwardParamTypeResolver parameterTypeResolver = ForwardParamTypeResolver.getInstance();
+    private final ForwardNameExprTypeResolver nameExprTypeResolver = ForwardNameExprTypeResolver.getInstance();
+    private final ClassOriginRegister classOriginRegister = ClassOriginRegister.getInstance();
+    private final MethodOriginRegister methodOriginRegister = MethodOriginRegister.getInstance();
+    private final EnumOriginRegister enumOriginRegister = EnumOriginRegister.getInstance();
+
 
     protected TypeResolverManager() {
-    };
+    }
 
-    boolean registerOriginClass(ClassOrInterfaceDeclaration ClassOrInterfaceDeclaration,
-            ClassDTO classDto) {
+    Optional<String> generateClassFullQualifiedName(
+        ClassOrInterfaceDeclaration ClassOrInterfaceDeclaration) {
         try {
-            return classOriginRegister.registerOriginDtoService(ClassOrInterfaceDeclaration, classDto);
+            return classOriginRegister.getFullQualifiedName(ClassOrInterfaceDeclaration);
         } catch (Exception e) {
             // System.out.println(e.getMessage());
-            return false;
+            return Optional.empty();
         }
     }
 
-    boolean registerOriginMethod(MethodDeclaration md, MethodDeclarationDTO mdDto) {
+    Optional<String> generateMethodDeclFullQualifiedName(MethodDeclaration md) {
         try {
-            return methodOriginRegister.registerOriginDtoService(md, mdDto);
+            return methodOriginRegister.getFullQualifiedName(md);
         } catch (Exception e) {
             // System.out.println(e.getMessage());
-            return false;
+            return Optional.empty();
         }
     }
 
-    boolean registerReturnType(MethodDeclaration md, ReturnMapperDTO rmDto) {
+    Optional<String> generateEnumFullQualifiedName(EnumDeclaration enumNode) {
         try {
-            return returnMapperTypeResolver.getTypeResolver().registerRefDtoService(md, rmDto);
+            return enumOriginRegister.getFullQualifiedName(enumNode);
         } catch (Exception e) {
-            // System.out.println(e.getMessage());
-            return false;
+            return Optional.empty();
         }
     }
 
-    boolean registerParameter(Parameter pm, ParameterDTO pmDto) {
+    Optional<String> generateReturnFullQualifiedName(MethodDeclaration md) {
         try {
-            return parameterTypeResolver.getTypeResolver().registerRefDtoService(pm, pmDto);
+            return returnMapperTypeResolver.getFullQualifiedName(md);
         } catch (Exception e) {
             // System.out.println(e.getMessage());
-            return false;
+            return Optional.empty();
         }
     }
 
-    boolean registerMethodCallExpr(MethodCallExpr mce, MethodCallExprDTO mceDto) {
+    Optional<String> generateParameterFullQualifiedName(Parameter pm) {
         try {
-            return methodCallExprTypeResolver.getTypeResolver().registerRefDtoService(mce, mceDto);
+            return parameterTypeResolver.getFullQualifiedName(pm);
         } catch (Exception e) {
             // System.out.println(e.getMessage());
-            return false;
+            return Optional.empty();
         }
     }
 
-    boolean registerFieldDecl(FieldDeclaration fd, MemberVariableDeclarationDTO mvdDto) {
+    Optional<String> generateMethodCallExprFullQualifiedName(MethodCallExpr mce) {
         try {
-            return fieldDeclTypeResolver.getTypeResolver().registerRefDtoService(fd, mvdDto);
+            return methodCallExprTypeResolver.getFullQualifiedName(mce);
         } catch (Exception e) {
             // System.out.println(e.getMessage());
-            return false;
+            return Optional.empty();
         }
     }
 
-    boolean registerVariableDecl(VariableDeclarationExpr vdExpr, StmtVariableDeclarationDTO stmtDto) {
+    Optional<String> generateFieldDeclFullQualifiedName(FieldDeclaration fd) {
         try {
-            return variableDeclTypeResolver.getTypeResolver().registerRefDtoService(vdExpr, stmtDto);
+            return fieldDeclTypeResolver.getFullQualifiedName(fd);
         } catch (Exception e) {
             // System.out.println(e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    Optional<String> generateVariableDeclFullQualifiedName(VariableDeclarationExpr vdExpr) {
+        try {
+            return variableDeclTypeResolver.getFullQualifiedName(vdExpr);
+        } catch (Exception e) {
+            // System.out.println(e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    Optional<String> generateNameExprFullQualifiedName(Expression nameExpr) {
+        try {
+            return nameExprTypeResolver.getFullQualifiedName(nameExpr);
+        } catch (Exception e) {
+//            System.out.println(e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    Optional<FullQualifiedNameDTO> getFullQualifiedNameDTOFromTypeMapper(String fullQualifiedName,
+        Long symbolStatusId) {
+        try {
+            return typeMapperManager.getFullQualifiedNameDTOFromTypeMapper(fullQualifiedName);
+
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    boolean registerFullQualifiedNameDTO(String fullQualifiedName,
+        FullQualifiedNameDTO fullQualifiedNameDTO) {
+        try {
+            return typeMapperManager.registerFullQualifiedNameDTO(fullQualifiedName,
+                fullQualifiedNameDTO);
+        } catch (Exception e) {
             return false;
         }
     }

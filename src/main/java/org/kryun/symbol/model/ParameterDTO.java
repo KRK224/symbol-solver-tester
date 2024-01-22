@@ -3,10 +3,10 @@ package org.kryun.symbol.model;
 import com.github.javaparser.ast.Node;
 import org.kryun.symbol.model.interfaces.ClassReferable;
 
-public class ParameterDTO implements ClassReferable {
+public class ParameterDTO {
     private Long parameterId;
     private Long methodDeclId;
-    private Long typeClassId;
+    private Long fullQualifiedNameId;
     private Integer index;
     private String name;
     private String type;
@@ -28,15 +28,12 @@ public class ParameterDTO implements ClassReferable {
     public void setMethodDeclId(Long methodDeclId) {
         this.methodDeclId = methodDeclId;
     }
-
-    private Long getTypeClassId() {
-        return typeClassId;
+    public Long getFullQualifiedNameId() {
+        return fullQualifiedNameId;
     }
-
-    private void setTypeClassId(Long typeClassId) {
-        this.typeClassId = typeClassId;
+    public void setFullQualifiedNameId(Long fullQualifiedNameId) {
+        this.fullQualifiedNameId = fullQualifiedNameId;
     }
-
     public Integer getIndex() {
         return index;
     }
@@ -80,23 +77,13 @@ public class ParameterDTO implements ClassReferable {
     @Override
     public String toString() {
         return "ParameterDTO{" +
-                "parameterId: " + parameterId +
-                ", methodDeclarationId: " + methodDeclId +
-                ", typeClassId: " + typeClassId +
-                ", index: " + index +
-                ", name: '" + name + '\'' +
-                ", type: '" + type + '\'' +
-                ", position: " + position +
-                '}';
-    }
-
-    @Override
-    public Long getTypeClassIdImpl() {
-        return getTypeClassId();
-    }
-
-    @Override
-    public void setTypeClassIdImpl(Long classId) {
-        setTypeClassId(classId);
+            "parameterId: " + parameterId +
+            ", methodDeclarationId: " + methodDeclId +
+            ", fullQualifiedNameId : " + fullQualifiedNameId +
+            ", index: " + index +
+            ", name: '" + name + '\'' +
+            ", type: '" + type + '\'' +
+            ", position: " + position +
+            '}';
     }
 }

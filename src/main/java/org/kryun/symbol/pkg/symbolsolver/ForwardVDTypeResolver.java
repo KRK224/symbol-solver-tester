@@ -1,36 +1,25 @@
 package org.kryun.symbol.pkg.symbolsolver;
 
-import com.github.javaparser.ast.Node;
+import java.util.Optional;
+
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.resolution.types.ResolvedType;
-import org.kryun.symbol.model.interfaces.ClassReferable;
 import org.kryun.symbol.pkg.symbolsolver.interfaces.generateresolvedtype.GenerateClassResolvedType;
 import org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.AbstractClassReferableTypeResolver;
 
 public class ForwardVDTypeResolver implements GenerateClassResolvedType<VariableDeclarationExpr> {
-    private TypeMapperManager tmm;
+    private static class LazyHolder {
+        private static final ForwardVDTypeResolver INSTANCE = new ForwardVDTypeResolver();
+    }
+
+    public static ForwardVDTypeResolver getInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
     private AbstractClassReferableTypeResolver vdTypeResolverImpl;
 
-    public ForwardVDTypeResolver(TypeMapperManager tmm) {
-        this.tmm = tmm;
-        this.vdTypeResolverImpl = new AbstractClassReferableTypeResolver(tmm) {
-            @Override
-            public final boolean registerRefDtoService(Node node, ClassReferable refDto) throws Exception {
-                try {
-                    if (node instanceof VariableDeclarationExpr) {
-                        VariableDeclarationExpr vde = (VariableDeclarationExpr) node;
-                        HashcodeDTO hashcodeDTO = generateClassHashcodeDTO(generateResolvedType(vde));
-                        registerRefDtoByHashcodeDTO(hashcodeDTO, refDto);
-                        return true;
-                    } else {
-                        Exception e = new Exception("전달받은 Node의 타입이 VariableDelcarationExpr이 아닙니다.");
-                        throw e;
-                    }
-                } catch (Exception e) {
-                    throw e;
-                }
-            }
-        };
+    private ForwardVDTypeResolver() {
+        this.vdTypeResolverImpl = new AbstractClassReferableTypeResolver();
     }
 
     @Override
@@ -42,8 +31,12 @@ public class ForwardVDTypeResolver implements GenerateClassResolvedType<Variable
         }
     }
 
-    public AbstractClassReferableTypeResolver getTypeResolver() {
-        return vdTypeResolverImpl;
+    public Optional<String> getFullQualifiedName(VariableDeclarationExpr vde) {
+        try {
+            return vdTypeResolverImpl.getFullQualifiedName(generateResolvedType(vde));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
 }

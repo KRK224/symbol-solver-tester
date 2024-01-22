@@ -17,7 +17,6 @@ public class MemberVariableDeclarationDTO extends VariableDeclarationDTO {
         return "MemberVariableDeclarationDTO : {" +
                 "variableId : " + getVariableId() +
                 ", blockId : " + getBlockId() +
-                ", typeClassId : " + getTypeClassIdImpl() +
                 ", belongedClassId : " + getBelongedClassId() +
                 ", importId : " + getImportId() +
                 ", name : '" + getName() + '\'' +

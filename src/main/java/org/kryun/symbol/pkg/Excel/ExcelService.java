@@ -6,35 +6,66 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.kryun.global.config.AppConfig;
-import org.kryun.symbol.pkg.Excel.impl.ClassExcel;
-import org.kryun.symbol.pkg.Excel.impl.MceExcel;
-import org.kryun.symbol.pkg.Excel.impl.MdExcel;
-import org.kryun.symbol.pkg.Excel.impl.MvdExcel;
-import org.kryun.symbol.pkg.Excel.impl.SvdExcel;
+import org.kryun.symbol.model.ParameterDTO;
+import org.kryun.symbol.pkg.Excel.impl.BlockExcelService;
+import org.kryun.symbol.pkg.Excel.impl.ClassExcelService;
+import org.kryun.symbol.pkg.Excel.impl.FullQualifiedNameExcelService;
+import org.kryun.symbol.pkg.Excel.impl.MethodCallExprExcelService;
+import org.kryun.symbol.pkg.Excel.impl.MethodDeclExcelService;
+import org.kryun.symbol.pkg.Excel.impl.MemberVarDeclExcelService;
+import org.kryun.symbol.pkg.Excel.impl.ParameterExcelService;
+import org.kryun.symbol.pkg.Excel.impl.ReturnMapperExcelService;
+import org.kryun.symbol.pkg.Excel.impl.StmtVarDeclExcelService;
+import org.kryun.symbol.pkg.Excel.impl.SymbolReferenceExcelService;
 
 public class ExcelService {
-    private ClassExcel classExcel;
-    private MceExcel mceExcel;
-    private MdExcel mdExcel;
-    private MvdExcel mvdExcel;
-    private SvdExcel svdExcel;
+    private BlockExcelService blockExcelService;
+    private ClassExcelService classExcelService;
+    private FullQualifiedNameExcelService fullQualifiedNameExcelService;
+    private MemberVarDeclExcelService memberVarDeclExcelService;
+    private MethodCallExprExcelService methodCallExprExcelService;
+    private MethodDeclExcelService methodDeclExcelService;
+    private ParameterExcelService parameterExcelService;
+    private ReturnMapperExcelService returnMapperExcelService;
+    private StmtVarDeclExcelService stmtVarDeclExcelService;
+    private SymbolReferenceExcelService symbolReferenceExcelService;
 
-    public ExcelService(ClassExcel ce, MceExcel mce, MdExcel mde, MvdExcel mvde, SvdExcel svde) {
-        classExcel = ce;
-        mceExcel = mce;
-        mdExcel = mde;
-        mvdExcel = mvde;
-        svdExcel = svde;
+
+    public ExcelService(BlockExcelService blockExcelService, ClassExcelService classExcelService,
+        FullQualifiedNameExcelService fullQualifiedNameExcelService,
+        MemberVarDeclExcelService memberVarDeclExcelService,
+        MethodCallExprExcelService methodCallExprExcelService,
+        MethodDeclExcelService methodDeclExcelService, ParameterExcelService parameterExcelService,
+        ReturnMapperExcelService returnMapperExcelService,
+        StmtVarDeclExcelService stmtVarDeclExcelService,
+        SymbolReferenceExcelService symbolReferenceExcelService) {
+        this.blockExcelService = blockExcelService;
+        this.classExcelService = classExcelService;
+        this.fullQualifiedNameExcelService = fullQualifiedNameExcelService;
+        this.memberVarDeclExcelService = memberVarDeclExcelService;
+        this.methodCallExprExcelService = methodCallExprExcelService;
+        this.methodDeclExcelService = methodDeclExcelService;
+        this.parameterExcelService = parameterExcelService;
+        this.returnMapperExcelService = returnMapperExcelService;
+        this.stmtVarDeclExcelService = stmtVarDeclExcelService;
+        this.symbolReferenceExcelService = symbolReferenceExcelService;
     }
 
     public void createExcelFile(String projectName) throws Exception {
         try {
             XSSFWorkbook wb = new XSSFWorkbook();
-            classExcel.createExcelSheet(wb);
-            mceExcel.createExcelSheet(wb);
-            mdExcel.createExcelSheet(wb);
-            mvdExcel.createExcelSheet(wb);
-            svdExcel.createExcelSheet(wb);
+
+            this.blockExcelService.createExcelSheet(wb);
+            this.classExcelService.createExcelSheet(wb);
+            this.fullQualifiedNameExcelService.createExcelSheet(wb);
+            this.memberVarDeclExcelService.createExcelSheet(wb);
+            this.methodCallExprExcelService.createExcelSheet(wb);
+            this.methodDeclExcelService.createExcelSheet(wb);
+            this.parameterExcelService.createExcelSheet(wb);
+            this.returnMapperExcelService.createExcelSheet(wb);
+            this.stmtVarDeclExcelService.createExcelSheet(wb);
+            this.symbolReferenceExcelService.createExcelSheet(wb);
+
 
             LocalDateTime now = LocalDateTime.now();
             String formatedNow = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss_"));

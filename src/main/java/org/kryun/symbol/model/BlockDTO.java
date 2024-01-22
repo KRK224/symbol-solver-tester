@@ -10,6 +10,7 @@ public class BlockDTO {
     private String blockType;
     private Node node;
     private Position position;
+    private Position bracketPosition;
 
     public Long getSymbolReferenceId() {
         return symbolReferenceId;
@@ -60,6 +61,14 @@ public class BlockDTO {
         this.position = position;
     }
 
+    public Position getBracketPosition() {
+        return bracketPosition;
+    }
+
+    public void setBracketPosition(Position bracketPosition) {
+        this.bracketPosition = bracketPosition;
+    }
+
     public Node getNode() {
         return node;
     }
@@ -68,13 +77,6 @@ public class BlockDTO {
         this.node = node;
     }
 
-    // public String getSrcPath() {
-    // return srcPath;
-    // }
-
-    // public void setSrcPath(String srcPath) {
-    // this.srcPath = srcPath;
-    // }
 
     @Override
     public String toString() {

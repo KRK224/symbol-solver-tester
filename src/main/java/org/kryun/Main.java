@@ -14,7 +14,7 @@ public class Main {
         symbolStatusDTO.setSymbolStatusId(1L);
 
         ProjectParser projectParser = new ProjectParser();
-        String projName = "java-baseball_origin";
+        String projName = "mybatis";
         String projectPath = AppConfig.WORKSPACE_PATH + "/" + projName + "/";
 
         projectParser.parseProject(projectPath, symbolStatusDTO, projName);

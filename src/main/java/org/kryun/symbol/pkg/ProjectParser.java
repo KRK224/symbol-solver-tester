@@ -104,6 +104,7 @@ public class ProjectParser {
             }
 
         } finally {
+            System.out.println("마지막 심볼 추적:: \n" + convertJavaParserToSymbol.printLastSymbol());
             convertJavaParserToSymbol.clear();
         }
     }

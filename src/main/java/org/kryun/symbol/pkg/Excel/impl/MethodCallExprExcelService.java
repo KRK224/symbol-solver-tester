@@ -32,7 +32,6 @@ public class MethodCallExprExcelService implements ExcelServiceInterface {
         for (int i = 0; i < dataList.size(); i++) {
             Row bodyRow = sheet.createRow(i + 1);
             MethodCallExprDTO methodCallExprDTO = dataList.get(i);
-            System.out.println("methodCallExprDTO = " + methodCallExprDTO);
             for (int j = 0; j < columnList.size(); j++) {
                 Cell cell = bodyRow.createCell(j);
                 switch (columnList.get(j)) {

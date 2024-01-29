@@ -26,7 +26,6 @@ public class ClassExcelService implements ExcelServiceInterface {
     public void createExcelSheet(XSSFWorkbook wb) throws Exception {
         XSSFSheet sheet = ExcelServiceInterface.createTitle(wb, columnList, "class");
 
-        // 데이터 입력
         for (int i = 0; i < dataList.size(); i++) {
             Row bodyRow = sheet.createRow(i + 1);
             ClassDTO classDTO = dataList.get(i);

@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import java.util.List;
@@ -39,6 +40,7 @@ import org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.Refera
 
 public class ConvertJavaParserToSymbol {
 
+    private final LastSymbolDetector lastSymbolDetector = new LastSymbolDetector();
     private final TypeResolverManager typeResolverManager = new TypeResolverManager();
     private final SymbolReferenceManager symbolReferenceManager = new SymbolReferenceManager();
     private final BlockManager blockManager = new BlockManager();
@@ -60,6 +62,7 @@ public class ConvertJavaParserToSymbol {
     public ConvertJavaParserToSymbol() throws Exception {
 
     }
+
     public List<SymbolReferenceDTO> getSymbolReferenceDTOList() {
         return symbolReferenceManager.getSymbolReferenceDTOList();
     }
@@ -133,10 +136,17 @@ public class ConvertJavaParserToSymbol {
         typeResolverManager.clear();
     }
 
+    public String printLastSymbol() {
+        return lastSymbolDetector.toString();
+    }
+
     public void visit(Node node, Long symbolStatusId, String srcPath) {
+        //현재 파일 위치 저장
+        lastSymbolDetector.setSrcPath(srcPath);
         BlockDTO rootBlock = visitAndBuildRoot((CompilationUnit) node, symbolStatusId, srcPath);
         visitAndBuild(node, symbolStatusId, rootBlock);
     }
+
     private BlockDTO visitAndBuildRoot(CompilationUnit cu, Long symbolStatusId, String srcPath) {
         Map<String, Long> symbolIds = generatorIdentifier.symbolIds;
         String nodeType = cu.getMetaModel().getTypeName();
@@ -163,7 +173,6 @@ public class ConvertJavaParserToSymbol {
                     symbolIds.put("package", symbolIds.get("package") + 1);
                     break;
                 case "ModuleDeclaration":
-                    // 모듈이 뭔지 잘 모르겠으나 해당 준위에 포함됨.
                     break;
                 case "ImportDeclaration":
                     importManager.buildImport(symbolIds.get("import"), rootBlockDTO.getBlockId(),
@@ -175,6 +184,10 @@ public class ConvertJavaParserToSymbol {
                         rootBlockDTO.getBlockId(),
                         packageDTO != null ? packageDTO.getPackageId() : -100L, node);
                     symbolIds.put("class", symbolIds.get("class") + 1);
+
+                    lastSymbolDetector.setSymbolType("ClassOrInterfaceDeclaration");
+                    lastSymbolDetector.setSymbolName(classDTO.getName());
+                    lastSymbolDetector.setSymbolPostion(classDTO.getPosition());
 
                     typeResolverManager.generateClassFullQualifiedName(
                             (ClassOrInterfaceDeclaration) node)
@@ -201,6 +214,10 @@ public class ConvertJavaParserToSymbol {
                         rootBlockDTO.getBlockId(),
                         packageDTO != null ? packageDTO.getPackageId() : -100L, node);
                     symbolIds.put("class", symbolIds.get("class") + 1);
+
+                    lastSymbolDetector.setSymbolType("EnumDeclaration");
+                    lastSymbolDetector.setSymbolName(enumDTO.getName());
+                    lastSymbolDetector.setSymbolPostion(enumDTO.getPosition());
 
                     typeResolverManager.generateEnumFullQualifiedName(
                             (EnumDeclaration) node)
@@ -263,6 +280,10 @@ public class ConvertJavaParserToSymbol {
                     ReturnMapperDTO rmDto = mdDto.getReturnMapper();
                     List<ParameterDTO> parameterDTOList = mdDto.getParameters();
 
+                    lastSymbolDetector.setSymbolType("MethodDeclaration");
+                    lastSymbolDetector.setSymbolName(mdDto.getName());
+                    lastSymbolDetector.setSymbolPostion(mdDto.getPosition());
+
                     typeResolverManager.generateMethodDeclFullQualifiedName(
                         (MethodDeclaration) node).ifPresent((fqn) -> {
                         FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
@@ -281,6 +302,11 @@ public class ConvertJavaParserToSymbol {
                             });
                         mdDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
                     });
+
+                    lastSymbolDetector.setSymbolType("ReturnMapper");
+                    lastSymbolDetector.setSymbolName(rmDto.getType());
+                    lastSymbolDetector.setSymbolPostion(rmDto.getPosition());
+
                     typeResolverManager.generateReturnFullQualifiedName((MethodDeclaration) node)
                         .ifPresent((fqn) -> {
                             FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
@@ -302,6 +328,11 @@ public class ConvertJavaParserToSymbol {
 
                     parameterDTOList.stream().forEach(paramDto -> {
                         Parameter parameterNode = (Parameter) paramDto.getNode();
+
+                        lastSymbolDetector.setSymbolType("parameterDTO");
+                        lastSymbolDetector.setSymbolName(paramDto.getName());
+                        lastSymbolDetector.setSymbolPostion(paramDto.getPosition());
+
                         typeResolverManager.generateParameterFullQualifiedName(parameterNode)
                             .ifPresent((fqn) -> {
 
@@ -337,8 +368,12 @@ public class ConvertJavaParserToSymbol {
             MemberVariableDeclarationDTO mvdDto = variableManager.buildVariableDeclInMemberField(
                 symbolIds.get("member_var_decl"), blockDTO.getBlockId(),
                 belongedClassDTO.getClassId(), node);
-
             symbolIds.put("member_var_decl", symbolIds.get("member_var_decl") + 1);
+
+            lastSymbolDetector.setSymbolType("FieldDeclaration");
+            lastSymbolDetector.setSymbolName(mvdDto.getName());
+            lastSymbolDetector.setSymbolPostion(mvdDto.getPosition());
+
             typeResolverManager.generateFieldDeclFullQualifiedName((FieldDeclaration) node)
                 .ifPresent((fqn) -> {
                     FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
@@ -364,6 +399,11 @@ public class ConvertJavaParserToSymbol {
             StmtVariableDeclarationDTO stmtDto = variableManager.buildVariableDeclInMethod(
                 symbolIds.get("stmt_var_decl"), blockDTO.getBlockId(), node);
             symbolIds.put("stmt_var_decl", symbolIds.get("stmt_var_decl") + 1);
+
+            lastSymbolDetector.setSymbolType("VariableDeclarationExpr");
+            lastSymbolDetector.setSymbolName(stmtDto.getName());
+            lastSymbolDetector.setSymbolPostion(stmtDto.getPosition());
+
             typeResolverManager.generateVariableDeclFullQualifiedName(
                     (VariableDeclarationExpr) node)
                 .ifPresent((fqn) -> {
@@ -401,6 +441,10 @@ public class ConvertJavaParserToSymbol {
                 ReturnMapperDTO rmDto = mdDto.getReturnMapper();
                 List<ParameterDTO> parameterDTOList = mdDto.getParameters();
 
+                lastSymbolDetector.setSymbolType("MethodDeclaration");
+                lastSymbolDetector.setSymbolName(mdDto.getName());
+                lastSymbolDetector.setSymbolPostion(mdDto.getPosition());
+
                 typeResolverManager.generateMethodDeclFullQualifiedName((MethodDeclaration) node)
                     .ifPresent((fqn) -> {
                         FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
@@ -419,6 +463,11 @@ public class ConvertJavaParserToSymbol {
 
                         mdDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
                     });
+
+                lastSymbolDetector.setSymbolType("ReturnMapper");
+                lastSymbolDetector.setSymbolName(rmDto.getType());
+                lastSymbolDetector.setSymbolPostion(rmDto.getPosition());
+
                 typeResolverManager.generateReturnFullQualifiedName((MethodDeclaration) node)
                     .ifPresent((fqn) -> {
                         FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
@@ -439,6 +488,11 @@ public class ConvertJavaParserToSymbol {
 
                 parameterDTOList.stream().forEach(paramDto -> {
                     Parameter parameterNode = (Parameter) paramDto.getNode();
+
+                    lastSymbolDetector.setSymbolType("parameterDTO");
+                    lastSymbolDetector.setSymbolName(paramDto.getName());
+                    lastSymbolDetector.setSymbolPostion(paramDto.getPosition());
+
                     typeResolverManager.generateParameterFullQualifiedName(parameterNode)
                         .ifPresent((fqn) -> {
                             FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
@@ -466,7 +520,11 @@ public class ConvertJavaParserToSymbol {
                 symbolIds.get("method_call_expr"),
                 blockDTO.getBlockId(), node, nodeType, generatorIdentifier);
             symbolIds.put("method_call_expr", symbolIds.get("method_call_expr") + 1);
-            // typeResolverManager.registerMethodCallExpr((MethodCallExpr) node, mceDto);
+
+            lastSymbolDetector.setSymbolType("MethodCallExpr");
+            lastSymbolDetector.setSymbolPostion(mceDto.getPosition());
+            lastSymbolDetector.setSymbolName(mceDto.getName());
+
             typeResolverManager.generateMethodCallExprFullQualifiedName((MethodCallExpr) node)
                 .ifPresent((fqn) -> {
                     FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
@@ -486,8 +544,11 @@ public class ConvertJavaParserToSymbol {
                     mceDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
                 });
 
-            // methodCallExpr의 nameExpr의 fqn을 뽑아내는 과정
             if (mceDto.getNameExprNode() != null) {
+
+                lastSymbolDetector.setSymbolType("methodCall NameExpr");
+                lastSymbolDetector.setSymbolName(mceDto.getScopeSimpleName());
+
                 typeResolverManager.generateNameExprFullQualifiedName(mceDto.getNameExprNode())
                     .ifPresent((fqn) -> {
                         FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager.getFullQualifiedNameDTOFromTypeMapper(

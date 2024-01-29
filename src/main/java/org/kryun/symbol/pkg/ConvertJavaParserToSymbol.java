@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import java.util.List;
@@ -61,6 +62,7 @@ public class ConvertJavaParserToSymbol {
     public ConvertJavaParserToSymbol() throws Exception {
 
     }
+
     public List<SymbolReferenceDTO> getSymbolReferenceDTOList() {
         return symbolReferenceManager.getSymbolReferenceDTOList();
     }
@@ -144,6 +146,7 @@ public class ConvertJavaParserToSymbol {
         BlockDTO rootBlock = visitAndBuildRoot((CompilationUnit) node, symbolStatusId, srcPath);
         visitAndBuild(node, symbolStatusId, rootBlock);
     }
+
     private BlockDTO visitAndBuildRoot(CompilationUnit cu, Long symbolStatusId, String srcPath) {
         Map<String, Long> symbolIds = generatorIdentifier.symbolIds;
         String nodeType = cu.getMetaModel().getTypeName();
@@ -170,7 +173,6 @@ public class ConvertJavaParserToSymbol {
                     symbolIds.put("package", symbolIds.get("package") + 1);
                     break;
                 case "ModuleDeclaration":
-                    // 모듈이 뭔지 잘 모르겠으나 해당 준위에 포함됨.
                     break;
                 case "ImportDeclaration":
                     importManager.buildImport(symbolIds.get("import"), rootBlockDTO.getBlockId(),
@@ -183,9 +185,6 @@ public class ConvertJavaParserToSymbol {
                         packageDTO != null ? packageDTO.getPackageId() : -100L, node);
                     symbolIds.put("class", symbolIds.get("class") + 1);
 
-                    /**
-                     * 테스트 용도
-                     */
                     lastSymbolDetector.setSymbolType("ClassOrInterfaceDeclaration");
                     lastSymbolDetector.setSymbolName(classDTO.getName());
                     lastSymbolDetector.setSymbolPostion(classDTO.getPosition());
@@ -215,9 +214,6 @@ public class ConvertJavaParserToSymbol {
                         rootBlockDTO.getBlockId(),
                         packageDTO != null ? packageDTO.getPackageId() : -100L, node);
                     symbolIds.put("class", symbolIds.get("class") + 1);
-                    /**
-                     * 테스트 용도
-                     */
 
                     lastSymbolDetector.setSymbolType("EnumDeclaration");
                     lastSymbolDetector.setSymbolName(enumDTO.getName());
@@ -529,10 +525,6 @@ public class ConvertJavaParserToSymbol {
             lastSymbolDetector.setSymbolPostion(mceDto.getPosition());
             lastSymbolDetector.setSymbolName(mceDto.getName());
 
-            if(lastSymbolDetector.getSymbolName().equals("invoke") && lastSymbolDetector.getSymbolPostion().beginLine == 49) {
-                System.out.println("브레이킹 포인트");
-            }
-
             typeResolverManager.generateMethodCallExprFullQualifiedName((MethodCallExpr) node)
                 .ifPresent((fqn) -> {
                     FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
@@ -552,7 +544,6 @@ public class ConvertJavaParserToSymbol {
                     mceDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
                 });
 
-            // methodCallExpr의 nameExpr의 fqn을 뽑아내는 과정
             if (mceDto.getNameExprNode() != null) {
 
                 lastSymbolDetector.setSymbolType("methodCall NameExpr");

@@ -25,7 +25,7 @@ public class BlockExcelService implements ExcelServiceInterface {
     @Override
     public void createExcelSheet(XSSFWorkbook wb) throws Exception {
      XSSFSheet sheet = ExcelServiceInterface.createTitle(wb, columnList, "block");
-        // 데이터 입력
+
         for (int i = 0; i < dataList.size(); i++) {
             Row bodyRow = sheet.createRow(i + 1);
             BlockDTO blockDTO = dataList.get(i);

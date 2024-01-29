@@ -1,7 +1,12 @@
 package org.kryun.symbol.pkg;
 
 import com.github.javaparser.ParseResult;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.ProjectRoot;
 import com.github.javaparser.utils.SourceRoot;
@@ -112,14 +117,28 @@ public class ProjectParser {
     private ProjectRoot getProjectRoot(String projectPath, int depth) throws Exception {
         System.out.println("find ProjectRoot recursively, depth: " + depth);
         System.out.println("project path: " + projectPath);
-        if (depth > 5)
+        if (depth > 5) {
             throw new Exception("can't find ProjectRoot, please check package and src directory");
+        }
 
-        if (!projectPath.endsWith("/"))
+        if (!projectPath.endsWith("/")) {
             projectPath += "/";
+        }
 
         Path root = Paths.get(projectPath);
-        SymbolSolverCollectionStrategy symbolSolverCollectionStrategy = new SymbolSolverCollectionStrategy();
+//        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
+
+        Path jars = Paths.get(projectPath + "src/main/resources/jsqlparser-4.7.jar");
+        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false),
+            new JarTypeSolver(jars));
+
+
+        ParserConfiguration parserConfiguration = new ParserConfiguration();
+        parserConfiguration.setSymbolResolver(new JavaSymbolSolver(typeSolver));
+
+        SymbolSolverCollectionStrategy symbolSolverCollectionStrategy = new SymbolSolverCollectionStrategy(
+            parserConfiguration);
+
         ProjectRoot projectRoot = symbolSolverCollectionStrategy.collect(root);
 
         if (projectRoot.getSourceRoots().size() == 0) {
@@ -133,7 +152,8 @@ public class ProjectParser {
             });
             System.out.println("subSrcPath = " + subSrcPath);
             if (subSrcPath == null || subSrcPath.length == 0) {
-                throw new Exception("Can't find ProjectRoot, please check package and src directory");
+                throw new Exception(
+                    "Can't find ProjectRoot, please check package and src directory");
             }
             return getProjectRoot(projectPath + subSrcPath[0], ++depth);
         }

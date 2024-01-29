@@ -5,6 +5,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.kryun.symbol.model.Position;
 
+/**
+ * find stackoverflow symbol
+ */
 @Getter
 @Setter
 @ToString

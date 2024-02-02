@@ -128,9 +128,9 @@ public class ProjectParser {
         Path root = Paths.get(projectPath);
 //        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
 
-        Path jars = Paths.get(projectPath + "src/main/resources/jsqlparser-4.7.jar");
-        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false),
-            new JarTypeSolver(jars));
+        Path jars = Paths.get( projectPath + "src/main/resources/jsqlparser-4.7.jar");
+        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
+        typeSolver.add(new JarTypeSolver(jars));
 
 
         ParserConfiguration parserConfiguration = new ParserConfiguration();

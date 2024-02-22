@@ -525,6 +525,10 @@ public class ConvertJavaParserToSymbol {
             lastSymbolDetector.setSymbolPostion(mceDto.getPosition());
             lastSymbolDetector.setSymbolName(mceDto.getName());
 
+            if(mceDto.getPosition().beginLine == 32) {
+                System.out.println("breakpoint");
+            }
+
             typeResolverManager.generateMethodCallExprFullQualifiedName((MethodCallExpr) node)
                 .ifPresent((fqn) -> {
                     FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager

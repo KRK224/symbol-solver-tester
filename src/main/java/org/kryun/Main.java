@@ -19,6 +19,7 @@ public class Main {
 
         // Connection 넘겨주기
         projectParser.parseProject(projectPath, symbolStatusDTO, projName);
+        symbolStatusDTO.setStatusEnum(SymbolStatusEnum.COMPLETED);
     }
 
 }

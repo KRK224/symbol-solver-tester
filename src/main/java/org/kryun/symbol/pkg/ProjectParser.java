@@ -128,16 +128,15 @@ public class ProjectParser {
         Path root = Paths.get(projectPath);
 //        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
 
-        Path jars = Paths.get( projectPath + "src/main/resources/jsqlparser-4.7.jar");
-        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
-        typeSolver.add(new JarTypeSolver(jars));
+//        Path jars = Paths.get( projectPath + "src/main/resources/jsqlparser-4.7.jar");
+//        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
+//        typeSolver.add(new JarTypeSolver(jars));
 
 
-        ParserConfiguration parserConfiguration = new ParserConfiguration();
-        parserConfiguration.setSymbolResolver(new JavaSymbolSolver(typeSolver));
+//        ParserConfiguration parserConfiguration = new ParserConfiguration();
+//        parserConfiguration.setSymbolResolver(new JavaSymbolSolver(typeSolver));
 
-        SymbolSolverCollectionStrategy symbolSolverCollectionStrategy = new SymbolSolverCollectionStrategy(
-            parserConfiguration);
+        SymbolSolverCollectionStrategy symbolSolverCollectionStrategy = new SymbolSolverCollectionStrategy();
 
         ProjectRoot projectRoot = symbolSolverCollectionStrategy.collect(root);
 
@@ -150,7 +149,7 @@ public class ProjectParser {
                     return new File(dir, name).isDirectory() ? name.startsWith("src") : false;
                 }
             });
-            System.out.println("subSrcPath = " + subSrcPath);
+
             if (subSrcPath == null || subSrcPath.length == 0) {
                 throw new Exception(
                     "Can't find ProjectRoot, please check package and src directory");

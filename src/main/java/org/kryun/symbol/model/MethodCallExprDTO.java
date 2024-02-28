@@ -5,68 +5,23 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
+import org.kryun.symbol.model.interfaces.NameExprFQNReferable;
 
 @Getter
 @Setter
-public class MethodCallExprDTO {
+public class MethodCallExprDTO implements NameExprFQNReferable {
     private String name;
     private Long blockId;
     private Long methodCallExprId;
     private Long fullQualifiedNameId;
+    private Boolean isFullQualifiedNameIdFromDB = false;
     private Position position;
     private Expression nameExprNode;
 
     private Long nameExprFullQualifiedNameId;
+    private Boolean isNameExprFullQualifiedNameIdFromDB = false;
     private List<ArgumentDTO> arguments;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Long getFullQualifiedNameId() {
-        return fullQualifiedNameId;
-    }
-
-    public void setFullQualifiedNameId(Long fullQualifiedNameId) {
-        this.fullQualifiedNameId = fullQualifiedNameId;
-    }
-
-    public Long getBlockId() {
-        return blockId;
-    }
-
-
-    public void setBlockId(Long blockId) {
-        this.blockId = blockId;
-    }
-
-    public Long getMethodCallExprId() {
-        return methodCallExprId;
-    }
-
-
-    public void setMethodCallExprId(Long methodCallExprId) {
-        this.methodCallExprId = methodCallExprId;
-    }
-    public Position getPosition() {
-        return position;
-    }
-
-    public void setPosition(Position position) {
-        this.position = position;
-    }
-
-    public List<ArgumentDTO> getArguments() {
-        return arguments;
-    }
-
-    public void setArguments(List<ArgumentDTO> arguments) {
-        this.arguments = arguments;
-    }
 
     /**
      * Todo. methodCall Chaining 이슈 해결
@@ -96,6 +51,4 @@ public class MethodCallExprDTO {
             ", NameExpr : " + nameExprNode +
             "}\n";
     }
-
-
 }

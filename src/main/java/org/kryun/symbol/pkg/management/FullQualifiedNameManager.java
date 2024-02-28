@@ -11,6 +11,8 @@ public class FullQualifiedNameManager {
 
     public FullQualifiedNameManager() {
         this.fullQualifiedNameDTOList = new ArrayList<>();
+
+
     }
 
     public List<FullQualifiedNameDTO> getFullQualifiedNameDTOList() {

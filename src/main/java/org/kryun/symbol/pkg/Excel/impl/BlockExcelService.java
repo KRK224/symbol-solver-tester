@@ -11,6 +11,8 @@ import org.kryun.symbol.model.BlockDTO;
 import org.kryun.symbol.pkg.Excel.interfaces.ExcelServiceInterface;
 
 public class BlockExcelService implements ExcelServiceInterface {
+    private final List<String> columnList = new ArrayList<>(Arrays.asList("id", "parentId", "symbolReferenceId"));
+    private List<BlockDTO> dataList = new ArrayList<>();
 
     public BlockExcelService() {
     }
@@ -18,9 +20,6 @@ public class BlockExcelService implements ExcelServiceInterface {
     public BlockExcelService(List<BlockDTO> dataList) {
         this.dataList = dataList;
     }
-
-    private List<String> columnList = new ArrayList<>(Arrays.asList("id", "parentId", "symbolReferenceId"));
-    private List<BlockDTO> dataList = new ArrayList<>();
 
     @Override
     public void createExcelSheet(XSSFWorkbook wb) throws Exception {

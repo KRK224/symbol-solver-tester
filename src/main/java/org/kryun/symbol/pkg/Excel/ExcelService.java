@@ -10,6 +10,7 @@ import org.kryun.symbol.model.ParameterDTO;
 import org.kryun.symbol.pkg.Excel.impl.BlockExcelService;
 import org.kryun.symbol.pkg.Excel.impl.ClassExcelService;
 import org.kryun.symbol.pkg.Excel.impl.FullQualifiedNameExcelService;
+import org.kryun.symbol.pkg.Excel.impl.ImportExcelService;
 import org.kryun.symbol.pkg.Excel.impl.MethodCallExprExcelService;
 import org.kryun.symbol.pkg.Excel.impl.MethodDeclExcelService;
 import org.kryun.symbol.pkg.Excel.impl.MemberVarDeclExcelService;
@@ -19,6 +20,8 @@ import org.kryun.symbol.pkg.Excel.impl.StmtVarDeclExcelService;
 import org.kryun.symbol.pkg.Excel.impl.SymbolReferenceExcelService;
 
 public class ExcelService {
+
+    private ImportExcelService importExcelService;
     private BlockExcelService blockExcelService;
     private ClassExcelService classExcelService;
     private FullQualifiedNameExcelService fullQualifiedNameExcelService;
@@ -31,6 +34,8 @@ public class ExcelService {
     private SymbolReferenceExcelService symbolReferenceExcelService;
 
 
+
+
     public ExcelService(BlockExcelService blockExcelService, ClassExcelService classExcelService,
         FullQualifiedNameExcelService fullQualifiedNameExcelService,
         MemberVarDeclExcelService memberVarDeclExcelService,
@@ -38,8 +43,10 @@ public class ExcelService {
         MethodDeclExcelService methodDeclExcelService, ParameterExcelService parameterExcelService,
         ReturnMapperExcelService returnMapperExcelService,
         StmtVarDeclExcelService stmtVarDeclExcelService,
-        SymbolReferenceExcelService symbolReferenceExcelService) {
+        SymbolReferenceExcelService symbolReferenceExcelService,
+        ImportExcelService importExcelService) {
         this.blockExcelService = blockExcelService;
+        this.importExcelService = importExcelService;
         this.classExcelService = classExcelService;
         this.fullQualifiedNameExcelService = fullQualifiedNameExcelService;
         this.memberVarDeclExcelService = memberVarDeclExcelService;
@@ -56,6 +63,7 @@ public class ExcelService {
             XSSFWorkbook wb = new XSSFWorkbook();
 
             this.blockExcelService.createExcelSheet(wb);
+            this.importExcelService.createExcelSheet(wb);
             this.classExcelService.createExcelSheet(wb);
             this.fullQualifiedNameExcelService.createExcelSheet(wb);
             this.memberVarDeclExcelService.createExcelSheet(wb);

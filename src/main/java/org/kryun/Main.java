@@ -14,7 +14,7 @@ public class Main {
         symbolStatusDTO.setSymbolStatusId(1L);
 
         ProjectParser projectParser = new ProjectParser();
-        String projName = "blank";
+        String projName = "netty-all";
         String projectPath = AppConfig.WORKSPACE_PATH + "/" + projName + "/";
 
         // Connection 넘겨주기

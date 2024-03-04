@@ -14,7 +14,7 @@ public class Main {
         symbolStatusDTO.setSymbolStatusId(1L);
 
         ProjectParser projectParser = new ProjectParser();
-        String projName = "blank";
+        String projName = "test-px";
         String projectPath = AppConfig.WORKSPACE_PATH + "/" + projName + "/";
 
         // Connection 넘겨주기

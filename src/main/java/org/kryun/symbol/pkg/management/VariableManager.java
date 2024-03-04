@@ -90,7 +90,7 @@ public class VariableManager {
         variableDeclarationDTO.setBlockId(blockId);
         variableDeclarationDTO.setBelongedClassId(belongedClassId);
         // variableDeclarationDTO.setTypeClassId(1L); // 일단 1로 한다
-        variableDeclarationDTO.setImportId(1L); // 일단 1로 한다
+        variableDeclarationDTO.setImportId(-1L); // 일단 -1로 한다
         variableDeclarationDTO.setVariableType(variableType);
         variableDeclarationDTO.setType(type);
         variableDeclarationDTO.setName(name);
@@ -162,7 +162,7 @@ public class VariableManager {
         variableDeclarationDTO.setVariableId(variableId);
         variableDeclarationDTO.setBlockId(blockId);
         // variableDeclarationDTO.setTypeClassId(1L); // 일단 1로 한다
-        variableDeclarationDTO.setImportId(1L); // 일단 1로 한다
+        variableDeclarationDTO.setImportId(-1L); // 일단 -1로 한다
         variableDeclarationDTO.setVariableType(variableType);
         variableDeclarationDTO.setType(type);
         variableDeclarationDTO.setName(name);

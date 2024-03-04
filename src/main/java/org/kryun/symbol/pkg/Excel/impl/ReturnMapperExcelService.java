@@ -13,7 +13,7 @@ import org.kryun.symbol.pkg.Excel.interfaces.ExcelServiceInterface;
 
 public class ReturnMapperExcelService implements ExcelServiceInterface {
     private List<String> columnList = new ArrayList<String>(
-        Arrays.asList("id", "methodDeclId", "fullQualifiedNameId", "type"));
+        Arrays.asList("id", "methodDeclId", "fullQualifiedNameId", "type", "importId"));
 
     private List<ReturnMapperDTO> dataList = new ArrayList<>();
 
@@ -46,6 +46,10 @@ public class ReturnMapperExcelService implements ExcelServiceInterface {
                         break;
                     case "type":
                         cell.setCellValue(returnMapperDTO.getType());
+                        break;
+                    case "importId":
+                        if(returnMapperDTO.getImportId() != null)
+                            cell.setCellValue(returnMapperDTO.getImportId());
                         break;
                     default:
                         System.out.println("ReturnMapper:: " + returnMapperDTO + "column 값을 다시 확인해주세요");

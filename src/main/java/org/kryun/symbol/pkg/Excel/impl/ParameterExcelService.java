@@ -20,7 +20,7 @@ public class ParameterExcelService implements ExcelServiceInterface {
     }
 
     private List<String> columnList = new ArrayList<String>(
-        Arrays.asList("id", "name", "methodDeclId", "fullQualifiedNameId", "type"));
+        Arrays.asList("id", "name", "methodDeclId", "fullQualifiedNameId", "type", "importId"));
     private List<ParameterDTO> dataList = new ArrayList<ParameterDTO>();
     @Override
     public void createExcelSheet(XSSFWorkbook wb) throws Exception {
@@ -48,6 +48,10 @@ public class ParameterExcelService implements ExcelServiceInterface {
                         break;
                     case "type":
                         cell.setCellValue(parameterDTO.getType());
+                        break;
+                    case "importId":
+                        if(parameterDTO.getImportId() != null)
+                            cell.setCellValue(parameterDTO.getImportId());
                         break;
                     default:
                         System.out.println("Paramemter:: " + parameterDTO + "column 값을 다시 확인해주세요");

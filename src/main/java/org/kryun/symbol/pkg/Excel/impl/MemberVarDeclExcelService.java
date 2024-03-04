@@ -17,7 +17,7 @@ import org.kryun.symbol.pkg.Excel.interfaces.ExcelServiceInterface;
 
 public class MemberVarDeclExcelService implements ExcelServiceInterface {
     private List<String> columnList = new ArrayList<String>(
-            Arrays.asList("id", "name", "belongedClassId", "type", "fullQualifiedNameId", "blockId"));
+            Arrays.asList("id", "name", "belongedClassId", "type", "importId", "fullQualifiedNameId", "blockId"));
     private List<MemberVariableDeclarationDTO> dataList = new ArrayList<MemberVariableDeclarationDTO>();
 
     public MemberVarDeclExcelService() {
@@ -49,6 +49,10 @@ public class MemberVarDeclExcelService implements ExcelServiceInterface {
                         break;
                     case "type":
                         cell.setCellValue(memberVariableDeclarationDTO.getType());
+                        break;
+                    case "importId":
+                        if(memberVariableDeclarationDTO.getImportId() != null)
+                            cell.setCellValue(memberVariableDeclarationDTO.getImportId());
                         break;
                     case "fullQualifiedNameId":
                         if(memberVariableDeclarationDTO.getFullQualifiedNameId() !=null)

@@ -20,7 +20,7 @@ import org.kryun.symbol.pkg.Excel.interfaces.ExcelServiceInterface;
 public class StmtVarDeclExcelService implements ExcelServiceInterface {
 
     List<String> columnList = new ArrayList<String>(
-        Arrays.asList("id", "name", "type", "fullQualifiedNameId", "blockId"));
+        Arrays.asList("id", "name", "type", "importId", "fullQualifiedNameId", "blockId"));
     private List<StmtVariableDeclarationDTO> dataList = new ArrayList<StmtVariableDeclarationDTO>();
 
     public StmtVarDeclExcelService(List<StmtVariableDeclarationDTO> dataList) {
@@ -49,6 +49,10 @@ public class StmtVarDeclExcelService implements ExcelServiceInterface {
                         break;
                     case "type":
                         cell.setCellValue(stmtVariableDeclarationDTO.getType());
+                        break;
+                    case "importId":
+                        if(stmtVariableDeclarationDTO.getImportId() != null)
+                            cell.setCellValue(stmtVariableDeclarationDTO.getImportId());
                         break;
                     case "fullQualifiedNameId":
                         if (stmtVariableDeclarationDTO.getFullQualifiedNameId() != null) {

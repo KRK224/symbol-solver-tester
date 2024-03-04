@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 import org.kryun.global.config.AppConfig;
@@ -34,9 +35,10 @@ import org.kryun.symbol.pkg.Excel.impl.SymbolReferenceExcelService;
 
 public class ProjectParser {
 
-    public void parseProject(String projectPath, SymbolStatusDTO symbolStatusDTO, String projName)
+    public void parseProject(String projectPath, SymbolStatusDTO symbolStatusDTO, String projName, Boolean isDependency)
         throws Exception {
-        ConvertJavaParserToSymbol convertJavaParserToSymbol = new ConvertJavaParserToSymbol();
+        ConvertJavaParserToSymbol convertJavaParserToSymbol = new ConvertJavaParserToSymbol(
+            symbolStatusDTO.getSymbolStatusId(), isDependency);
         try {
 
             try {
@@ -62,8 +64,7 @@ public class ProjectParser {
                             System.out.println("fileName:" + fileName);
 
                             // cu를 활용
-                            convertJavaParserToSymbol.visit(cu, symbolStatusDTO.getSymbolStatusId(),
-                                srcPath);
+                            convertJavaParserToSymbol.visit(cu, srcPath);
 
                         }
                     }
@@ -129,16 +130,16 @@ public class ProjectParser {
         }
 
         Path root = Paths.get(projectPath);
-//        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
+        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
 
 //        Path jars = Paths.get( projectPath + "src/main/resources/jsqlparser-4.7.jar");
 //        CombinedTypeSolver typeSolver = new CombinedTypeSolver(new ReflectionTypeSolver(false));
 //        typeSolver.add(new JarTypeSolver(jars));
 
-//        ParserConfiguration parserConfiguration = new ParserConfiguration();
-//        parserConfiguration.setSymbolResolver(new JavaSymbolSolver(typeSolver));
+        ParserConfiguration parserConfiguration = new ParserConfiguration();
+        parserConfiguration.setSymbolResolver(new JavaSymbolSolver(typeSolver));
 
-        SymbolSolverCollectionStrategy symbolSolverCollectionStrategy = new SymbolSolverCollectionStrategy();
+        SymbolSolverCollectionStrategy symbolSolverCollectionStrategy = new SymbolSolverCollectionStrategy(parserConfiguration);
 
         ProjectRoot projectRoot = symbolSolverCollectionStrategy.collect(root);
 

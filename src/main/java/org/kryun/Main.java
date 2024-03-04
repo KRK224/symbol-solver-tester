@@ -14,11 +14,11 @@ public class Main {
         symbolStatusDTO.setSymbolStatusId(1L);
 
         ProjectParser projectParser = new ProjectParser();
-        String projName = "netty-all";
+        String projName = "blank";
         String projectPath = AppConfig.WORKSPACE_PATH + "/" + projName + "/";
 
         // Connection 넘겨주기
-        projectParser.parseProject(projectPath, symbolStatusDTO, projName);
+        projectParser.parseProject(projectPath, symbolStatusDTO, projName, false);
         symbolStatusDTO.setStatusEnum(SymbolStatusEnum.COMPLETED);
     }
 

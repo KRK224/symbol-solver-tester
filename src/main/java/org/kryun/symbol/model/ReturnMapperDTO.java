@@ -5,14 +5,16 @@ import lombok.Getter;
 import lombok.Setter;
 import org.kryun.symbol.model.interfaces.ClassReferable;
 import org.kryun.symbol.model.interfaces.FQNReferable;
+import org.kryun.symbol.model.interfaces.ImportTrackable;
 
 @Getter
 @Setter
-public class ReturnMapperDTO implements FQNReferable {
+public class ReturnMapperDTO implements FQNReferable, ImportTrackable {
     private Long returnMapperId;
     private Long methodDeclId;
     private Long fullQualifiedNameId;
     private Boolean isFullQualifiedNameIdFromDB = false;
+    private Long importId;
     private String type;
     private Node node;
     private Position position;

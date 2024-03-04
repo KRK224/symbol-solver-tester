@@ -6,10 +6,11 @@ import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 import org.kryun.symbol.model.interfaces.FQNReferable;
+import org.kryun.symbol.model.interfaces.ImportTrackable;
 
 @Getter
 @Setter
-public class VariableDeclarationDTO implements FQNReferable {
+public class VariableDeclarationDTO implements FQNReferable, ImportTrackable {
     private Long variableId;
     private Long blockId;
     private Long importId;

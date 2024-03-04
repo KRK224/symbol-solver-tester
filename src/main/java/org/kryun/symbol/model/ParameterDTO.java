@@ -5,14 +5,16 @@ import lombok.Getter;
 import lombok.Setter;
 import org.kryun.symbol.model.interfaces.ClassReferable;
 import org.kryun.symbol.model.interfaces.FQNReferable;
+import org.kryun.symbol.model.interfaces.ImportTrackable;
 
 @Getter
 @Setter
-public class ParameterDTO implements FQNReferable {
+public class ParameterDTO implements FQNReferable, ImportTrackable {
     private Long parameterId;
     private Long methodDeclId;
     private Long fullQualifiedNameId;
     private Boolean isFullQualifiedNameIdFromDB = false;
+    private Long importId;
     private Integer index;
     private String name;
     private String type;

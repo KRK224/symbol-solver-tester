@@ -28,7 +28,7 @@ public class ImportManager {
         this.importDTOList.clear();
     }
 
-    public void buildImport(Long importId, Long blockId, Node node) {
+    public ImportDTO buildImport(Long importId, Long blockId, Node node) {
         ImportDTO importDTO = new ImportDTO();
         String name = "";
         String packageName = "";
@@ -93,6 +93,8 @@ public class ImportManager {
                 node.getRange().get().end.column));
 
         importDTOList.add(importDTO);
+
+        return importDTO;
 
     }
 }

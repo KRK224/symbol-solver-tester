@@ -10,8 +10,11 @@ import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import java.sql.Connection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.kryun.config.GeneratorIdentifier;
 import org.kryun.symbol.model.ArgumentDTO;
 import org.kryun.symbol.model.AssignExprDTO;
@@ -27,6 +30,8 @@ import org.kryun.symbol.model.ParameterDTO;
 import org.kryun.symbol.model.ReturnMapperDTO;
 import org.kryun.symbol.model.StmtVariableDeclarationDTO;
 import org.kryun.symbol.model.SymbolReferenceDTO;
+import org.kryun.symbol.model.interfaces.FQNReferable;
+import org.kryun.symbol.model.interfaces.NameExprFQNReferable;
 import org.kryun.symbol.pkg.management.BlockManager;
 import org.kryun.symbol.pkg.management.ClassManager;
 import org.kryun.symbol.pkg.management.ExprManager;
@@ -41,7 +46,12 @@ import org.kryun.symbol.pkg.symbolsolver.interfaces.referabletyperesolver.Refera
 public class ConvertJavaParserToSymbol {
 
     private final LastSymbolDetector lastSymbolDetector = new LastSymbolDetector();
-    private final TypeResolverManager typeResolverManager = new TypeResolverManager();
+    private final Long symbolStatusId;
+    private final Boolean isDependency;
+    private Connection conn;
+    private Map<String, Long> symbolIds;
+    private TypeResolverManager typeResolverManager = new TypeResolverManager();
+
     private final SymbolReferenceManager symbolReferenceManager = new SymbolReferenceManager();
     private final BlockManager blockManager = new BlockManager();
     private final PackageManager packageManager = new PackageManager();
@@ -52,15 +62,19 @@ public class ConvertJavaParserToSymbol {
     private final MethodManager methodManager = new MethodManager();
     private final ExprManager exprManager = new ExprManager();
     private final GeneratorIdentifier generatorIdentifier = new GeneratorIdentifier();
-
     private final FullQualifiedNameManager fullQualifiedNameManager = new FullQualifiedNameManager();
+
+    private Boolean hasPackage = false;
 
     public GeneratorIdentifier getGeneratorIdentifier() {
         return generatorIdentifier;
     }
 
-    public ConvertJavaParserToSymbol() throws Exception {
 
+    public ConvertJavaParserToSymbol(Long symbolStatusId, Boolean isDependency) {
+        this.isDependency = isDependency;
+        this.symbolStatusId = symbolStatusId;
+        this.symbolIds = generatorIdentifier.getSymbolIds();
     }
 
     public List<SymbolReferenceDTO> getSymbolReferenceDTOList() {
@@ -135,20 +149,13 @@ public class ConvertJavaParserToSymbol {
         fullQualifiedNameManager.fullQualifiedNameListClear();
         typeResolverManager.clear();
     }
-
     public String printLastSymbol() {
         return lastSymbolDetector.toString();
     }
 
-    public void visit(Node node, Long symbolStatusId, String srcPath) {
-        //현재 파일 위치 저장
-        lastSymbolDetector.setSrcPath(srcPath);
-        BlockDTO rootBlock = visitAndBuildRoot((CompilationUnit) node, symbolStatusId, srcPath);
-        visitAndBuild(node, symbolStatusId, rootBlock);
-    }
+    public void visit(CompilationUnit cu, String srcPath) {
+        Map<String, ImportDTO> typeImportMapper = new HashMap<>();
 
-    private BlockDTO visitAndBuildRoot(CompilationUnit cu, Long symbolStatusId, String srcPath) {
-        Map<String, Long> symbolIds = generatorIdentifier.symbolIds;
         String nodeType = cu.getMetaModel().getTypeName();
         Long currentSymbolReferenceId = symbolIds.get("symbol_reference");
         SymbolReferenceDTO symbolReferenceDTO = symbolReferenceManager
@@ -156,107 +163,67 @@ public class ConvertJavaParserToSymbol {
 
         symbolIds.put("symbol_reference", currentSymbolReferenceId + 1);
         Long symbolReferenceId = symbolReferenceDTO.getSymbolReferenceId();
-        BlockDTO rootBlockDTO = blockManager.buildBlock(symbolIds.get("block"), 1, null, nodeType,
-            cu,
+        BlockDTO rootBlock = blockManager.buildBlock(symbolIds.get("block"), 1, null, nodeType, cu,
             symbolReferenceId);
         symbolIds.put("block", symbolIds.get("block") + 1);
-        PackageDTO packageDTO = null;
-
-        // import, package, class dto 생성
-        List<Node> childNodes = cu.getChildNodes();
-        for (Node node : childNodes) {
-            String childNodeType = node.getMetaModel().getTypeName();
-            switch (childNodeType) {
-                case "PackageDeclaration":
-                    packageDTO = packageManager.buildPackage(symbolIds.get("package"),
-                        rootBlockDTO.getBlockId(), node);
-                    symbolIds.put("package", symbolIds.get("package") + 1);
-                    break;
-                case "ModuleDeclaration":
-                    break;
-                case "ImportDeclaration":
-                    importManager.buildImport(symbolIds.get("import"), rootBlockDTO.getBlockId(),
-                        node);
-                    symbolIds.put("import", symbolIds.get("import") + 1);
-                    break;
-                case "ClassOrInterfaceDeclaration":
-                    ClassDTO classDTO = classManager.buildClass(symbolIds.get("class"),
-                        rootBlockDTO.getBlockId(),
-                        packageDTO != null ? packageDTO.getPackageId() : -100L, node);
-                    symbolIds.put("class", symbolIds.get("class") + 1);
-
-                    lastSymbolDetector.setSymbolType("ClassOrInterfaceDeclaration");
-                    lastSymbolDetector.setSymbolName(classDTO.getName());
-                    lastSymbolDetector.setSymbolPostion(classDTO.getPosition());
-
-                    typeResolverManager.generateClassFullQualifiedName(
-                            (ClassOrInterfaceDeclaration) node)
-                        .ifPresent((fqn) -> {
-                            FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                                .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                                .orElseGet(() -> {
-                                    Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                                    Long currentId = symbolIds.get("full_qualified_name");
-                                    symbolIds.put("full_qualified_name", currentId + 1);
-                                    FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                        .buildFullQualifiedName(currentId, symbolStatusId, fqn,
-                                            isJdk);
-                                    typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                        newFullQualifiedNameDTO);
-                                    return newFullQualifiedNameDTO;
-                                });
-                            classDTO.setFullQualifiedNameId(
-                                fullQualifiedNameDTO.getFullQualifiedNameId());
-                        });
-                    break;
-                case "EnumDeclaration":
-                    ClassDTO enumDTO = classManager.buildEnum(symbolIds.get("class"),
-                        rootBlockDTO.getBlockId(),
-                        packageDTO != null ? packageDTO.getPackageId() : -100L, node);
-                    symbolIds.put("class", symbolIds.get("class") + 1);
-
-                    lastSymbolDetector.setSymbolType("EnumDeclaration");
-                    lastSymbolDetector.setSymbolName(enumDTO.getName());
-                    lastSymbolDetector.setSymbolPostion(enumDTO.getPosition());
-
-                    typeResolverManager.generateEnumFullQualifiedName(
-                            (EnumDeclaration) node)
-                        .ifPresent((fqn) -> {
-                            FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                                .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                                .orElseGet(() -> {
-                                    Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                                    Long currentId = symbolIds.get("full_qualified_name");
-                                    symbolIds.put("full_qualified_name", currentId + 1);
-                                    FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                        .buildFullQualifiedName(currentId, symbolStatusId, fqn,
-                                            isJdk);
-                                    typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                        newFullQualifiedNameDTO);
-                                    return newFullQualifiedNameDTO;
-                                });
-                            enumDTO.setFullQualifiedNameId(
-                                fullQualifiedNameDTO.getFullQualifiedNameId());
-                        });
-                    break;
-                // 커스텀 어노테이션 제작 시
-                case "AnnotationDeclaration":
-                    break;
-                // 무슨 새로운 class type 이라는데 처음봄...
-                case "RecordDeclaration":
-                    break;
-            }
-        }
-        return rootBlockDTO;
+        lastSymbolDetector.setSrcPath(srcPath);
+        visitAndBuild(cu, rootBlock, isDependency, typeImportMapper);
     }
 
-    private void visitAndBuild(Node node, Long symbolStatusId, BlockDTO parentBlockDTO) {
-        Map<String, Long> symbolIds = generatorIdentifier.symbolIds;
+    private void visitAndBuild(Node node, BlockDTO parentBlockDTO,        Boolean isDependency, Map<String, ImportDTO> typeImportMapper) {
         BlockDTO blockDTO;
         String nodeType = node.getMetaModel().getTypeName();
-        if (nodeType.equals("ClassOrInterfaceDeclaration") || nodeType.equals("EnumDeclaration") ||
-            nodeType.equals("AnnotationDeclaration") || nodeType.equals("RecordDeclaration")) {
-            // Todo. Inner Class에 대한 처리?
+
+        if (nodeType.equals("PackageDeclaration")) {
+            blockDTO = parentBlockDTO;
+            packageManager.buildPackage(symbolIds.get("package"), blockDTO.getBlockId(), node);
+            symbolIds.put("package", symbolIds.get("package") + 1);
+            hasPackage = true;
+        } else if (nodeType.equals("ImportDeclaration")) {
+            blockDTO = parentBlockDTO;
+            ImportDTO importDTO = importManager.buildImport(symbolIds.get("import"),
+                blockDTO.getBlockId(),node);
+            symbolIds.put("import", symbolIds.get("import") + 1);
+
+            if(!(importDTO.getIsAsterisk() || importDTO.getIsStatic())){
+                // static도 아니고, asterisk도 아닌 경우
+                typeImportMapper.put(importDTO.getClassName(), importDTO);
+            }
+
+        } else if (nodeType.equals("ClassOrInterfaceDeclaration")) {
+            blockDTO = parentBlockDTO;
+            ClassDTO classDTO = classManager.buildClass(symbolIds.get("class"),
+                blockDTO.getBlockId(),
+                getCurrentPackageId(symbolIds), node);
+            symbolIds.put("class", symbolIds.get("class") + 1);
+
+            lastSymbolDetector.setSymbolType("ClassOrInterfaceDeclaration");
+            lastSymbolDetector.setSymbolName(classDTO.getName());
+            lastSymbolDetector.setSymbolPostion(classDTO.getPosition());
+
+            if(classDTO.getName().equals("SaveGatewaySsl")) {
+                System.out.println("break point");
+            }
+            typeResolverManager.generateClassFullQualifiedName(
+                    (ClassOrInterfaceDeclaration) node)
+                .ifPresent(fqn -> updateClassFQNReferableDTO(fqn, classDTO));
+
+        } else if (nodeType.equals("EnumDeclaration")) {
+            blockDTO = parentBlockDTO;
+            ClassDTO enumDTO = classManager.buildEnum(symbolIds.get("class"),
+                blockDTO.getBlockId(),
+                getCurrentPackageId(symbolIds), node);
+            symbolIds.put("class", symbolIds.get("class") + 1);
+
+            lastSymbolDetector.setSymbolType("EnumDeclaration");
+            lastSymbolDetector.setSymbolName(enumDTO.getName());
+            lastSymbolDetector.setSymbolPostion(enumDTO.getPosition());
+
+            typeResolverManager.generateEnumFullQualifiedName(
+                (EnumDeclaration) node).ifPresent(fqn -> updateClassFQNReferableDTO(fqn, enumDTO));
+
+        } else if (nodeType.equals("AnnotationDeclaration") || nodeType.equals(
+            "RecordDeclaration")) {
             blockDTO = blockManager.buildBlock(symbolIds.get("block"),
                 parentBlockDTO.getDepth() + 1,
                 parentBlockDTO.getBlockId(), nodeType, node, parentBlockDTO.getSymbolReferenceId());
@@ -285,73 +252,18 @@ public class ConvertJavaParserToSymbol {
                     lastSymbolDetector.setSymbolPostion(mdDto.getPosition());
 
                     typeResolverManager.generateMethodDeclFullQualifiedName(
-                        (MethodDeclaration) node).ifPresent((fqn) -> {
-                        FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                            .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                            .orElseGet(() -> {
-                                // Todo. 임시 코드임... 나중에 리팩토링해서 객체로 묶기
-                                Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn,
-                                    mdDto.getName());
-                                Long currentId = symbolIds.get("full_qualified_name");
-                                symbolIds.put("full_qualified_name", currentId + 1);
-                                FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                    .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJdk);
-                                typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                    newFullQualifiedNameDTO);
-                                return newFullQualifiedNameDTO;
-                            });
-                        mdDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
-                    });
+                            (MethodDeclaration) node)
+                        .ifPresent(fqn -> updateMethodFQNReferableDTO(fqn, mdDto,
+                            mdDto.getName()));
 
-                    lastSymbolDetector.setSymbolType("ReturnMapper");
-                    lastSymbolDetector.setSymbolName(rmDto.getType());
-                    lastSymbolDetector.setSymbolPostion(rmDto.getPosition());
+                    typeResolverManager.generateReturnFullQualifiedName(
+                            (MethodDeclaration) node)
+                        .ifPresent(fqn -> updateClassFQNReferableDTO(fqn, rmDto));
 
-                    typeResolverManager.generateReturnFullQualifiedName((MethodDeclaration) node)
-                        .ifPresent((fqn) -> {
-                            FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                                .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                                .orElseGet(() -> {
-                                    Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                                    Long currentId = symbolIds.get("full_qualified_name");
-                                    symbolIds.put("full_qualified_name", currentId + 1);
-                                    FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                        .buildFullQualifiedName(currentId, symbolStatusId, fqn,
-                                            isJdk);
-                                    typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                        newFullQualifiedNameDTO);
-                                    return newFullQualifiedNameDTO;
-                                });
-                            rmDto.setFullQualifiedNameId(
-                                fullQualifiedNameDTO.getFullQualifiedNameId());
-                        });
-
-                    parameterDTOList.stream().forEach(paramDto -> {
+                    parameterDTOList.forEach(paramDto -> {
                         Parameter parameterNode = (Parameter) paramDto.getNode();
-
-                        lastSymbolDetector.setSymbolType("parameterDTO");
-                        lastSymbolDetector.setSymbolName(paramDto.getName());
-                        lastSymbolDetector.setSymbolPostion(paramDto.getPosition());
-
                         typeResolverManager.generateParameterFullQualifiedName(parameterNode)
-                            .ifPresent((fqn) -> {
-
-                                FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                                    .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                                    .orElseGet(() -> {
-                                        Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                                        Long currentId = symbolIds.get("full_qualified_name");
-                                        symbolIds.put("full_qualified_name", currentId + 1);
-                                        FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                            .buildFullQualifiedName(currentId, symbolStatusId, fqn,
-                                                isJdk);
-                                        typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                            newFullQualifiedNameDTO);
-                                        return newFullQualifiedNameDTO;
-                                    });
-                                paramDto.setFullQualifiedNameId(
-                                    fullQualifiedNameDTO.getFullQualifiedNameId());
-                            });
+                            .ifPresent(fqn -> updateClassFQNReferableDTO(fqn, paramDto));
                     });
                 }
             }
@@ -368,29 +280,24 @@ public class ConvertJavaParserToSymbol {
             MemberVariableDeclarationDTO mvdDto = variableManager.buildVariableDeclInMemberField(
                 symbolIds.get("member_var_decl"), blockDTO.getBlockId(),
                 belongedClassDTO.getClassId(), node);
+
             symbolIds.put("member_var_decl", symbolIds.get("member_var_decl") + 1);
 
             lastSymbolDetector.setSymbolType("FieldDeclaration");
             lastSymbolDetector.setSymbolName(mvdDto.getName());
             lastSymbolDetector.setSymbolPostion(mvdDto.getPosition());
 
-            typeResolverManager.generateFieldDeclFullQualifiedName((FieldDeclaration) node)
-                .ifPresent((fqn) -> {
-                    FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                        .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                        .orElseGet(() -> {
-                            Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                            Long currentId = symbolIds.get("full_qualified_name");
-                            symbolIds.put("full_qualified_name", currentId + 1);
-                            FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJdk);
-                            typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                newFullQualifiedNameDTO);
-                            return newFullQualifiedNameDTO;
-                        });
-
-                    mvdDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
-                });
+            Optional<String> fqn = typeResolverManager.generateFieldDeclFullQualifiedName((FieldDeclaration) node);
+            if(fqn.isPresent()){
+                updateClassFQNReferableDTO(fqn.get(), mvdDto);
+            } else { // fqn 생성 실패 시에 직접 찾기
+                String type = mvdDto.getType();
+                ImportDTO importDTO = typeImportMapper.get(type);
+                if (importDTO != null){
+                    mvdDto.setImportId(importDTO.getImportId());
+                    updateClassFQNReferableDTO(importDTO.getName(), mvdDto);
+                }
+            }
 
         }
         // 함수 내에서 선언하는 변수
@@ -404,25 +311,19 @@ public class ConvertJavaParserToSymbol {
             lastSymbolDetector.setSymbolName(stmtDto.getName());
             lastSymbolDetector.setSymbolPostion(stmtDto.getPosition());
 
-            typeResolverManager.generateVariableDeclFullQualifiedName(
-                    (VariableDeclarationExpr) node)
-                .ifPresent((fqn) -> {
-                    FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                        .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                        .orElseGet(() -> {
-                            Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                            Long currentId = symbolIds.get("full_qualified_name");
-                            symbolIds.put("full_qualified_name", currentId + 1);
-                            FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJdk);
-                            typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                newFullQualifiedNameDTO);
-                            return newFullQualifiedNameDTO;
-                        });
-                    stmtDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
-                });
-            // typeResolverManager.registerVariableDecl((VariableDeclarationExpr) node,
-            // stmtDto);
+            Optional<String> fqn = typeResolverManager.generateVariableDeclFullQualifiedName(
+                (VariableDeclarationExpr) node);
+            if(fqn.isPresent()) {
+                updateClassFQNReferableDTO(fqn.get(), stmtDto);
+            } else {
+                String type = stmtDto.getType();
+                ImportDTO importDTO = typeImportMapper.get(type);
+                if (importDTO != null) {
+                   stmtDto.setImportId(importDTO.getImportId());
+                   updateClassFQNReferableDTO(importDTO.getName(), stmtDto);
+                }
+            }
+
         } else if (nodeType.equals("MethodDeclaration") || nodeType.equals(
             "ConstructorDeclaration")) {
             // 내부에 BlockStmt 가 존재하여 별도의 Block 을 생성하지는 않음
@@ -445,72 +346,40 @@ public class ConvertJavaParserToSymbol {
                 lastSymbolDetector.setSymbolName(mdDto.getName());
                 lastSymbolDetector.setSymbolPostion(mdDto.getPosition());
 
-                typeResolverManager.generateMethodDeclFullQualifiedName((MethodDeclaration) node)
-                    .ifPresent((fqn) -> {
-                        FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                            .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                            .orElseGet(() -> {
-                                Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn,
-                                    mdDto.getName());
-                                Long currentId = symbolIds.get("full_qualified_name");
-                                symbolIds.put("full_qualified_name", currentId + 1);
-                                FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                    .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJdk);
-                                typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                    newFullQualifiedNameDTO);
-                                return newFullQualifiedNameDTO;
-                            });
+                typeResolverManager.generateMethodDeclFullQualifiedName(
+                        (MethodDeclaration) node)
+                    .ifPresent(fqn -> updateMethodFQNReferableDTO(fqn, mdDto,
+                        mdDto.getName()));
 
-                        mdDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
-                    });
+                Optional<String> rmFqn = typeResolverManager.generateReturnFullQualifiedName(
+                    (MethodDeclaration) node);
+                if(rmFqn.isPresent()) {
+                    updateClassFQNReferableDTO(rmFqn.get(), rmDto);
+                } else {
+                    String type = rmDto.getType();
+                    ImportDTO importDTO = typeImportMapper.get(type);
+                    if (importDTO !=null) {
+                        rmDto.setImportId(importDTO.getImportId());
+                        updateClassFQNReferableDTO(importDTO.getName(), rmDto);
+                    }
+                }
 
-                lastSymbolDetector.setSymbolType("ReturnMapper");
-                lastSymbolDetector.setSymbolName(rmDto.getType());
-                lastSymbolDetector.setSymbolPostion(rmDto.getPosition());
 
-                typeResolverManager.generateReturnFullQualifiedName((MethodDeclaration) node)
-                    .ifPresent((fqn) -> {
-                        FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                            .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                            .orElseGet(() -> {
-                                Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                                Long currentId = symbolIds.get("full_qualified_name");
-                                symbolIds.put("full_qualified_name", currentId + 1);
-                                FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                    .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJdk);
-                                typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                    newFullQualifiedNameDTO);
-                                return newFullQualifiedNameDTO;
-                            });
-
-                        rmDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
-                    });
-
-                parameterDTOList.stream().forEach(paramDto -> {
+                parameterDTOList.forEach(paramDto -> {
                     Parameter parameterNode = (Parameter) paramDto.getNode();
+                    Optional<String> paramFqn = typeResolverManager.generateParameterFullQualifiedName(
+                        parameterNode);
+                    if(paramFqn.isPresent()) {
+                        updateClassFQNReferableDTO(paramFqn.get(), paramDto);
+                    } else {
+                        String type = paramDto.getType();
+                        ImportDTO importDTO = typeImportMapper.get(type);
+                        if(importDTO != null) {
+                            paramDto.setImportId(importDTO.getImportId());
+                            updateClassFQNReferableDTO(importDTO.getName(), paramDto);
+                        }
+                    }
 
-                    lastSymbolDetector.setSymbolType("parameterDTO");
-                    lastSymbolDetector.setSymbolName(paramDto.getName());
-                    lastSymbolDetector.setSymbolPostion(paramDto.getPosition());
-
-                    typeResolverManager.generateParameterFullQualifiedName(parameterNode)
-                        .ifPresent((fqn) -> {
-                            FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                                .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                                .orElseGet(() -> {
-                                    Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                                    Long currentId = symbolIds.get("full_qualified_name");
-                                    symbolIds.put("full_qualified_name", currentId + 1);
-                                    FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                        .buildFullQualifiedName(currentId, symbolStatusId, fqn,
-                                            isJdk);
-                                    typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                        newFullQualifiedNameDTO);
-                                    return newFullQualifiedNameDTO;
-                                });
-                            paramDto.setFullQualifiedNameId(
-                                fullQualifiedNameDTO.getFullQualifiedNameId());
-                        });
                 });
             }
 
@@ -520,51 +389,22 @@ public class ConvertJavaParserToSymbol {
                 symbolIds.get("method_call_expr"),
                 blockDTO.getBlockId(), node, nodeType, generatorIdentifier);
             symbolIds.put("method_call_expr", symbolIds.get("method_call_expr") + 1);
+            if (!isDependency) {
+                // Dependency가 아닌 경우에만 동작
 
-            lastSymbolDetector.setSymbolType("MethodCallExpr");
-            lastSymbolDetector.setSymbolPostion(mceDto.getPosition());
-            lastSymbolDetector.setSymbolName(mceDto.getName());
+                lastSymbolDetector.setSymbolType("MethodCallExpr");
+                lastSymbolDetector.setSymbolName(mceDto.getName());
+                lastSymbolDetector.setSymbolPostion(mceDto.getPosition());
 
-            typeResolverManager.generateMethodCallExprFullQualifiedName((MethodCallExpr) node)
-                .ifPresent((fqn) -> {
-                    FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
-                        .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
-                        .orElseGet(() -> {
-                            Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn,
-                                mceDto.getName());
-                            Long currentId = symbolIds.get("full_qualified_name");
-                            symbolIds.put("full_qualified_name", currentId + 1);
-                            FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJdk);
-                            typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                newFullQualifiedNameDTO);
-                            return newFullQualifiedNameDTO;
-                        });
+                typeResolverManager.generateMethodCallExprFullQualifiedName(
+                        (MethodCallExpr) node)
+                    .ifPresent(fqn -> updateMethodFQNReferableDTO(fqn, mceDto, mceDto.getName()));
 
-                    mceDto.setFullQualifiedNameId(fullQualifiedNameDTO.getFullQualifiedNameId());
-                });
-
-            if (mceDto.getNameExprNode() != null) {
-
-                lastSymbolDetector.setSymbolType("methodCall NameExpr");
-                lastSymbolDetector.setSymbolName(mceDto.getScopeSimpleName());
-
-                typeResolverManager.generateNameExprFullQualifiedName(mceDto.getNameExprNode())
-                    .ifPresent((fqn) -> {
-                        FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager.getFullQualifiedNameDTOFromTypeMapper(
-                            fqn, symbolStatusId).orElseGet(() -> {
-                            Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
-                            Long currentId = symbolIds.get("full_qualified_name");
-                            symbolIds.put("full_qualified_name", currentId + 1);
-                            FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
-                                .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJdk);
-                            typeResolverManager.registerFullQualifiedNameDTO(fqn,
-                                newFullQualifiedNameDTO);
-                            return newFullQualifiedNameDTO;
-                        });
-                        mceDto.setNameExprFullQualifiedNameId(
-                            fullQualifiedNameDTO.getFullQualifiedNameId());
-                    });
+                if (mceDto.getNameExprNode() != null) {
+                    typeResolverManager.generateNameExprFullQualifiedName(
+                            mceDto.getNameExprNode())
+                        .ifPresent(fqn -> updateNameExprFQNReferableDTO(fqn, mceDto));
+                }
             }
 
         } else if (nodeType.equals("AssignExpr")) {
@@ -578,10 +418,87 @@ public class ConvertJavaParserToSymbol {
         for (Node childNode : childNodes) {
             if (!childNode.getMetaModel().getTypeName().equals("SimpleName") ||
                 !childNode.getMetaModel().getTypeName().equals("Modifier")) {
-                visitAndBuild(childNode, symbolStatusId, blockDTO);
+                visitAndBuild(childNode, blockDTO, isDependency, typeImportMapper);
             }
         }
     }
 
+    private long getCurrentPackageId(Map<String, Long> symbolIds) {
+        return hasPackage ? symbolIds.get("package") - 1 : -100L;
+    }
 
+    private void updateClassFQNReferableDTO(String fqn,
+        FQNReferable fqnReferable) {
+        if (fqn.equals("primitive")) {
+            fqnReferable.setIsFullQualifiedNameIdFromDB(true);
+            fqnReferable.setFullQualifiedNameId(-1L);
+        } else {
+            FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
+                .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
+                .orElseGet(() -> {
+                    Boolean isJDK = ReferableTypeResolver.isJdkPackage(fqn);
+                    Long currentId = symbolIds.get("full_qualified_name");
+                    symbolIds.put("full_qualified_name", currentId + 1);
+                    FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
+                        .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJDK);
+                    typeResolverManager.registerFullQualifiedNameDTO(fqn,
+                        newFullQualifiedNameDTO);
+                    return newFullQualifiedNameDTO;
+                });
+            fqnReferable.setIsFullQualifiedNameIdFromDB(
+                fullQualifiedNameDTO.getIsFullQualifiedNameIdFromDB());
+            fqnReferable.setFullQualifiedNameId(
+                fullQualifiedNameDTO.getFullQualifiedNameId());
+        }
+    }
+
+    private void updateMethodFQNReferableDTO(String fqn,
+        FQNReferable fqnReferable, String methodName) {
+        if (fqn.equals("primitive")) {
+            fqnReferable.setIsFullQualifiedNameIdFromDB(true);
+            fqnReferable.setFullQualifiedNameId(-1L);
+        } else {
+            FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager
+                .getFullQualifiedNameDTOFromTypeMapper(fqn, symbolStatusId)
+                .orElseGet(() -> {
+                    Boolean isJDK = ReferableTypeResolver.isJdkPackage(fqn, methodName);
+                    Long currentId = symbolIds.get("full_qualified_name");
+                    symbolIds.put("full_qualified_name", currentId + 1);
+                    FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
+                        .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJDK);
+                    typeResolverManager.registerFullQualifiedNameDTO(fqn,
+                        newFullQualifiedNameDTO);
+                    return newFullQualifiedNameDTO;
+                });
+            fqnReferable.setIsFullQualifiedNameIdFromDB(
+                fullQualifiedNameDTO.getIsFullQualifiedNameIdFromDB());
+            fqnReferable.setFullQualifiedNameId(
+                fullQualifiedNameDTO.getFullQualifiedNameId());
+        }
+    }
+
+    private void updateNameExprFQNReferableDTO(String fqn,
+        NameExprFQNReferable nameExprFQNReferable) {
+        if (fqn.equals("primitive")) {
+            // 의도치 않은 에러를 방지하기 위한 방어 로직
+            nameExprFQNReferable.setIsNameExprFullQualifiedNameIdFromDB(true);
+            nameExprFQNReferable.setNameExprFullQualifiedNameId(-1L);
+        } else {
+            FullQualifiedNameDTO fullQualifiedNameDTO = typeResolverManager.getFullQualifiedNameDTOFromTypeMapper(
+                fqn, symbolStatusId).orElseGet(() -> {
+                Boolean isJdk = ReferableTypeResolver.isJdkPackage(fqn);
+                Long currentId = symbolIds.get("full_qualified_name");
+                symbolIds.put("full_qualified_name", currentId + 1);
+                FullQualifiedNameDTO newFullQualifiedNameDTO = fullQualifiedNameManager
+                    .buildFullQualifiedName(currentId, symbolStatusId, fqn, isJdk);
+                typeResolverManager.registerFullQualifiedNameDTO(fqn,
+                    newFullQualifiedNameDTO);
+                return newFullQualifiedNameDTO;
+            });
+            nameExprFQNReferable.setIsNameExprFullQualifiedNameIdFromDB(
+                fullQualifiedNameDTO.getIsFullQualifiedNameIdFromDB());
+            nameExprFQNReferable.setNameExprFullQualifiedNameId(
+                fullQualifiedNameDTO.getFullQualifiedNameId());
+        }
+    }
 }

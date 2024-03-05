@@ -120,7 +120,7 @@ public class MethodManager {
                 symbolIds.put("parameter", symbolIds.get("parameter") + 1);
                 parameterDTO.setMethodDeclId(methodDeclarationId);
                 // parameterDTO.setTypeClassIdImpl(1L); // 일단 1로 박는다
-                parameterDTO.setImportId(-1L); // default -1L
+//                parameterDTO.setImportId(-1L); // default -1L
                 parameterDTO.setIndex(parameterIndex++);
                 parameterDTO.setName(parameterNode.getName().asString());
                 parameterDTO.setType(parameterNode.getType().asString());
@@ -149,7 +149,7 @@ public class MethodManager {
                 symbolIds.put("return_mapper", symbolIds.get("return_mapper") + 1);
                 returnMapperDTO.setMethodDeclId(methodDeclarationId);
                 // returnMapperDTO.setTypeClassIdImpl(1L); // 일단 1로 박는다
-                returnMapperDTO.setImportId(-1L); // default -1L
+//                returnMapperDTO.setImportId(-1L); // default -1L
                 returnMapperDTO.setType(returnValueTypeName);
                 returnMapperDTO.setNode(childNode);
                 returnMapperDTO.setPosition(

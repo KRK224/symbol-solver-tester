@@ -149,6 +149,7 @@ public class ConvertJavaParserToSymbol {
         fullQualifiedNameManager.fullQualifiedNameListClear();
         typeResolverManager.clear();
     }
+
     public String printLastSymbol() {
         return lastSymbolDetector.toString();
     }
@@ -170,7 +171,8 @@ public class ConvertJavaParserToSymbol {
         visitAndBuild(cu, rootBlock, isDependency, typeImportMapper);
     }
 
-    private void visitAndBuild(Node node, BlockDTO parentBlockDTO,        Boolean isDependency, Map<String, ImportDTO> typeImportMapper) {
+    private void visitAndBuild(Node node, BlockDTO parentBlockDTO, Boolean isDependency,
+        Map<String, ImportDTO> typeImportMapper) {
         BlockDTO blockDTO;
         String nodeType = node.getMetaModel().getTypeName();
 
@@ -182,10 +184,10 @@ public class ConvertJavaParserToSymbol {
         } else if (nodeType.equals("ImportDeclaration")) {
             blockDTO = parentBlockDTO;
             ImportDTO importDTO = importManager.buildImport(symbolIds.get("import"),
-                blockDTO.getBlockId(),node);
+                blockDTO.getBlockId(), node);
             symbolIds.put("import", symbolIds.get("import") + 1);
 
-            if(!(importDTO.getIsAsterisk() || importDTO.getIsStatic())){
+            if (!(importDTO.getIsAsterisk() || importDTO.getIsStatic())) {
                 // static도 아니고, asterisk도 아닌 경우
                 typeImportMapper.put(importDTO.getClassName(), importDTO);
             }
@@ -201,7 +203,7 @@ public class ConvertJavaParserToSymbol {
             lastSymbolDetector.setSymbolName(classDTO.getName());
             lastSymbolDetector.setSymbolPostion(classDTO.getPosition());
 
-            if(classDTO.getName().equals("SaveGatewaySsl")) {
+            if (classDTO.getName().equals("SaveGatewaySsl")) {
                 System.out.println("break point");
             }
             typeResolverManager.generateClassFullQualifiedName(
@@ -256,14 +258,28 @@ public class ConvertJavaParserToSymbol {
                         .ifPresent(fqn -> updateMethodFQNReferableDTO(fqn, mdDto,
                             mdDto.getName()));
 
-                    typeResolverManager.generateReturnFullQualifiedName(
-                            (MethodDeclaration) node)
-                        .ifPresent(fqn -> updateClassFQNReferableDTO(fqn, rmDto));
+                    typeResolverManager.generateReturnFullQualifiedName((MethodDeclaration) node)
+                        .ifPresentOrElse(fqn -> updateClassFQNReferableDTO(fqn, rmDto), () -> {
+                            String type = rmDto.getType();
+                            ImportDTO importDTO = typeImportMapper.get(normalizeType(type));
+                            if (importDTO != null) {
+                                rmDto.setImportId(importDTO.getImportId());
+                                updateClassFQNReferableDTO(importDTO.getName(), rmDto);
+                            }
+                        });
 
                     parameterDTOList.forEach(paramDto -> {
                         Parameter parameterNode = (Parameter) paramDto.getNode();
                         typeResolverManager.generateParameterFullQualifiedName(parameterNode)
-                            .ifPresent(fqn -> updateClassFQNReferableDTO(fqn, paramDto));
+                            .ifPresentOrElse(fqn -> updateClassFQNReferableDTO(fqn, paramDto),
+                                () -> {
+                                    String type = paramDto.getType();
+                                    ImportDTO importDTO = typeImportMapper.get(normalizeType(type));
+                                    if (importDTO != null) {
+                                        paramDto.setImportId(importDTO.getImportId());
+                                        updateClassFQNReferableDTO(importDTO.getName(), paramDto);
+                                    }
+                                });
                     });
                 }
             }
@@ -287,18 +303,15 @@ public class ConvertJavaParserToSymbol {
             lastSymbolDetector.setSymbolName(mvdDto.getName());
             lastSymbolDetector.setSymbolPostion(mvdDto.getPosition());
 
-            Optional<String> fqn = typeResolverManager.generateFieldDeclFullQualifiedName((FieldDeclaration) node);
-            if(fqn.isPresent()){
-                updateClassFQNReferableDTO(fqn.get(), mvdDto);
-            } else { // fqn 생성 실패 시에 직접 찾기
-                String type = mvdDto.getType();
-                ImportDTO importDTO = typeImportMapper.get(type);
-                if (importDTO != null){
-                    mvdDto.setImportId(importDTO.getImportId());
-                    updateClassFQNReferableDTO(importDTO.getName(), mvdDto);
-                }
-            }
-
+            typeResolverManager.generateFieldDeclFullQualifiedName((FieldDeclaration) node)
+                .ifPresentOrElse(fqn -> updateClassFQNReferableDTO(fqn, mvdDto), () -> {
+                    String type = mvdDto.getType();
+                    ImportDTO importDTO = typeImportMapper.get(normalizeType(type));
+                    if (importDTO != null) {
+                        mvdDto.setImportId(importDTO.getImportId());
+                        updateClassFQNReferableDTO(importDTO.getName(), mvdDto);
+                    }
+                });
         }
         // 함수 내에서 선언하는 변수
         else if (nodeType.equals("VariableDeclarationExpr")) {
@@ -311,18 +324,16 @@ public class ConvertJavaParserToSymbol {
             lastSymbolDetector.setSymbolName(stmtDto.getName());
             lastSymbolDetector.setSymbolPostion(stmtDto.getPosition());
 
-            Optional<String> fqn = typeResolverManager.generateVariableDeclFullQualifiedName(
-                (VariableDeclarationExpr) node);
-            if(fqn.isPresent()) {
-                updateClassFQNReferableDTO(fqn.get(), stmtDto);
-            } else {
-                String type = stmtDto.getType();
-                ImportDTO importDTO = typeImportMapper.get(type);
-                if (importDTO != null) {
-                   stmtDto.setImportId(importDTO.getImportId());
-                   updateClassFQNReferableDTO(importDTO.getName(), stmtDto);
-                }
-            }
+            typeResolverManager.generateVariableDeclFullQualifiedName(
+                    (VariableDeclarationExpr) node)
+                .ifPresentOrElse(fqn -> updateClassFQNReferableDTO(fqn, stmtDto), () -> {
+                    String type = stmtDto.getType();
+                    ImportDTO importDTO = typeImportMapper.get(normalizeType(type));
+                    if (importDTO != null) {
+                        stmtDto.setImportId(importDTO.getImportId());
+                        updateClassFQNReferableDTO(importDTO.getName(), stmtDto);
+                    }
+                });
 
         } else if (nodeType.equals("MethodDeclaration") || nodeType.equals(
             "ConstructorDeclaration")) {
@@ -351,35 +362,27 @@ public class ConvertJavaParserToSymbol {
                     .ifPresent(fqn -> updateMethodFQNReferableDTO(fqn, mdDto,
                         mdDto.getName()));
 
-                Optional<String> rmFqn = typeResolverManager.generateReturnFullQualifiedName(
-                    (MethodDeclaration) node);
-                if(rmFqn.isPresent()) {
-                    updateClassFQNReferableDTO(rmFqn.get(), rmDto);
-                } else {
-                    String type = rmDto.getType();
-                    ImportDTO importDTO = typeImportMapper.get(type);
-                    if (importDTO !=null) {
-                        rmDto.setImportId(importDTO.getImportId());
-                        updateClassFQNReferableDTO(importDTO.getName(), rmDto);
-                    }
-                }
-
+                typeResolverManager.generateReturnFullQualifiedName((MethodDeclaration) node)
+                    .ifPresentOrElse(fqn -> updateClassFQNReferableDTO(fqn, rmDto), () -> {
+                        String type = rmDto.getType();
+                        ImportDTO importDTO = typeImportMapper.get(normalizeType(type));
+                        if (importDTO != null) {
+                            rmDto.setImportId(importDTO.getImportId());
+                            updateClassFQNReferableDTO(importDTO.getName(), rmDto);
+                        }
+                    });
 
                 parameterDTOList.forEach(paramDto -> {
                     Parameter parameterNode = (Parameter) paramDto.getNode();
-                    Optional<String> paramFqn = typeResolverManager.generateParameterFullQualifiedName(
-                        parameterNode);
-                    if(paramFqn.isPresent()) {
-                        updateClassFQNReferableDTO(paramFqn.get(), paramDto);
-                    } else {
-                        String type = paramDto.getType();
-                        ImportDTO importDTO = typeImportMapper.get(type);
-                        if(importDTO != null) {
-                            paramDto.setImportId(importDTO.getImportId());
-                            updateClassFQNReferableDTO(importDTO.getName(), paramDto);
-                        }
-                    }
-
+                    typeResolverManager.generateParameterFullQualifiedName(parameterNode)
+                        .ifPresentOrElse(fqn -> updateClassFQNReferableDTO(fqn, paramDto), () -> {
+                            String type = paramDto.getType();
+                            ImportDTO importDTO = typeImportMapper.get(normalizeType(type));
+                            if (importDTO != null) {
+                                paramDto.setImportId(importDTO.getImportId());
+                                updateClassFQNReferableDTO(importDTO.getName(), paramDto);
+                            }
+                        });
                 });
             }
 
@@ -500,5 +503,18 @@ public class ConvertJavaParserToSymbol {
             nameExprFQNReferable.setNameExprFullQualifiedNameId(
                 fullQualifiedNameDTO.getFullQualifiedNameId());
         }
+    }
+
+    private String normalizeType(String type) {
+        String normalizedType = type;
+        if (normalizedType.contains("<")) { // Generic을 가지고 있는 type
+            normalizedType = normalizedType.substring(0, normalizedType.indexOf("<"));
+        }
+        if (normalizedType.contains(".")) {
+            String[] splits = normalizedType.split("\\.");
+            normalizedType = splits[splits.length - 1];
+        }
+//        System.out.println("normalizedType = " + normalizedType);
+        return normalizedType;
     }
 }

@@ -18,6 +18,8 @@ public class AbstractClassReferableTypeResolver implements ReferableTypeResolver
                 ResolvedReferenceType resolvedReferenceType = resolvedType.asReferenceType();
                 String fullQualifiedName = resolvedReferenceType.getQualifiedName();
                 return Optional.of(fullQualifiedName);
+            } else if (resolvedType.isPrimitive() || resolvedType.isVoid()) {
+                return Optional.of("primitive");
             } else {
                 return Optional.empty();
             }
